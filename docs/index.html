@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="把一段 AI 对话变成一张四块转弯图：原以为 → 撞车 → 正解 → 一句带走。">
+  <title>make-infographic · 一张图，一个转弯</title>
+  <style>
+    :root{--ink:#17181c;--muted:#656b76;--line:#dfe3ea;--wash:#f5f7fc;--brand:#2f5cff;--warn:#a86400;--warn-bg:#fff7e9;--paper:#fff;--bg:#f6f6f3}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:inherit}.shell{max-width:1180px;margin:0 auto;padding:28px 24px 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-size:15px;letter-spacing:.1em;color:var(--muted);font-weight:700}.top a{font-size:14px;text-decoration:none;color:var(--muted)}
+    .hero{margin:54px 0 34px;max-width:900px}.hero h1{font-size:clamp(36px,6vw,68px);line-height:1.08;letter-spacing:-1.5px;margin:0 0 18px}.hero p{font-size:clamp(17px,2.4vw,23px);line-height:1.6;color:#4b515b;margin:0}.hero p strong{color:var(--ink)}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,460px);gap:22px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px}.panel h2{font-size:15px;margin:0 0 12px;color:var(--muted);font-weight:700;letter-spacing:.04em}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:#3d434d}.chip:hover{border-color:#aeb8c8}
+    textarea{width:100%;min-height:250px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:14px;font:15px/1.65 inherit;color:var(--ink);background:#fcfcfd;outline:none}textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,92,255,.1)}.actions{display:flex;align-items:center;gap:12px;margin-top:14px}.primary{border:0;background:var(--ink);color:#fff;border-radius:10px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer}.primary:hover{background:#000}.ghost{border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 16px;font-size:14px;cursor:pointer;color:#3d434d}.status{font-size:13px;color:var(--muted);line-height:1.5}
+    .preview{position:sticky;top:20px}.canvasWrap{display:flex;justify-content:center;background:#ecece8;border-radius:14px;padding:14px;min-height:300px}canvas{display:block;width:100%;max-width:360px;height:auto;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08)}.previewHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.previewHead h2{margin:0}.download{font-size:13px;padding:8px 12px}
+    .note{margin-top:14px;font-size:13px;line-height:1.6;color:var(--muted)}.install{margin-top:34px;background:var(--ink);color:#fff;border-radius:16px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;text-decoration:none}.install strong{font-size:18px}.install span{font-size:14px;color:#c9cdd5}.install b{font-size:22px}.foot{margin-top:22px;font-size:12px;color:#8a8f98;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    @media(max-width:820px){.shell{padding:20px 16px 36px}.hero{margin:36px 0 24px}.workspace{grid-template-columns:1fr}.preview{position:static}.canvasWrap{padding:10px}canvas{max-width:340px}.install{align-items:flex-start;flex-direction:column}.top a{display:none}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top"><div class="brand">make-infographic</div><a href="https://github.com/han5810xy-dotcom/make-infographic" target="_blank" rel="noreferrer">GitHub ↗</a></header>
+    <section class="hero">
+      <h1>AI 记得每一次对话，<br>你只记得住一张图。</h1>
+      <p><strong>原以为 → 撞车 → 正解 → 一句带走。</strong><br>不是摘要，是记录你怎么想通的。</p>
+    </section>
+    <section class="workspace">
+      <div class="panel">
+        <h2>粘贴一段对话</h2>
+        <div class="chips" id="chips"></div>
+        <textarea id="source" spellcheck="false" aria-label="对话输入"></textarea>
+        <div class="actions">
+          <button class="primary" id="render">出图</button>
+          <button class="ghost" id="clear">清空</button>
+          <span class="status" id="status">不调模型，只在浏览器里整理。</span>
+        </div>
+        <div class="note">内置三个真实示例的预生成结果，并按关键词匹配。没有命中时会用简单规则整理，不会上传文本。</div>
+      </div>
+      <div class="panel preview">
+        <div class="previewHead"><h2>预览</h2><button class="ghost download" id="download" disabled>下载 PNG</button></div>
+        <div class="canvasWrap"><canvas id="card" width="1080" height="1560" aria-label="转弯图预览"></canvas></div>
+        <div class="note" id="matchNote">等待出图。</div>
+      </div>
+    </section>
+    <a class="install" href="https://github.com/han5810xy-dotcom/make-infographic#一行安装" target="_blank" rel="noreferrer">
+      <div><strong>想在自己的 Qoder 里用？</strong><br><span>选中一段对话，说「出图」。</span></div><b>安装 →</b>
+    </a>
+    <footer class="foot"><span>@han5810xy · make-infographic</span><span>纯前端 · 文本不离开浏览器</span></footer>
+  </main>
+  <script>
+    const examples = [
+      {
+        id: 'curiosity', name: '好奇心与间隔重复',
+        keywords: ['好奇','艾宾浩斯','复习','Anki','记忆','提取','厌烦','抖音','预测误差'],
+        dialogue: `用户：为什么有些内容让人厌烦，有些却让人停不下来？\n助手：更准确的拆法是把 wanting 和 liking 分开。多巴胺系统更接近想要和寻求，享乐系统更接近喜欢和满足。让两者解耦的关键是预测误差和新颖性：输入与预期高度吻合时信息量很低，人容易厌烦；存在缺口且未闭合时，人就会继续寻求。艾宾浩斯曲线不是记忆衰减表，是一条好奇心供给曲线。衰减制造缺口，缺口制造想要。Anki 把复习安排在快忘了的时刻，但更值得尝试的是在你几乎还答得上的时候安排提取。上限比下限更重要：探针明显过易，等于宣告这个你已经知道了，那是纯粹的厌烦成本。入口成本要接近零，提取成本不可绕过，必须先产出答案才有反馈。`,
+        card: {title:'艾宾浩斯曲线不是记忆衰减表，一条好奇心供给曲线。',before:'艾宾浩斯曲线不是记忆衰减表',snag:'上限比下限更重要：探针明显过易，等于宣告「这个你已经知道了」，那是纯粹的厌烦成本，换不到任何学习收益，还教会用户你的估分不准。',after:'一条好奇心供给曲线。',takeaway:'入口成本 → 0（一次点击进入探针）；提取成本 → 不可绕过（必须先产出答案才有反馈）。'}
+      },
+      {
+        id: 'skip', name: '跳过行为是证据',
+        keywords: ['跳过','探针','指标','会话时长','成瘾','行为数据','估分','噪声'],
+        dialogue: `用户：用户跳过探针，是不是直接当噪声忽略？\n助手：跳过行为别当噪声丢。用户跳过探针是全系统信息量最高的证据之一——行为数据，不是自评。它可能意味着估分过高、novelty 供给断裂、或情绪/时段不匹配，三者修法完全不同。`,
+        card: {title:'把跳过行为当噪声',before:'把跳过行为当噪声',snag:'它可能意味着估分过高、novelty 供给断裂、或情绪/时段不匹配，三者修法完全不同。',after:'用户跳过探针是全系统信息量最高的证据之一——行为数据，不是自评。',takeaway:'三者修法完全不同。'}
+      },
+      {
+        id: 'repeat', name: '重复节点，不重复卡片',
+        keywords: ['重复','节点','新奇','情景','载体','间隔','组合','范畴错误'],
+        dialogue: `用户：Anki 一直在重复卡片，用户还是会厌烦，问题在哪？\n助手：重复的对象是概念，新的载体必须是情景。同一节点、新情景，就既满足间隔重复又满足新奇供给。厌烦有很大一块是范畴错误：一个已经变成工具的节点还在被当作测验对象。Anki 重复卡片，你重复节点。排期算法一样，载荷每次是新的。`,
+        card: {title:'Anki 重复卡片，你重复节点。',before:'Anki 重复卡片',snag:'厌烦有很大一块是范畴错误：一个已经变成工具的节点还在被当作测验对象。',after:'你重复节点。',takeaway:'排期算法一样，载荷每次是新的。'}
+      }
+    ];
+    const source = document.querySelector('#source');
+    const statusEl = document.querySelector('#status');
+    const matchNote = document.querySelector('#matchNote');
+    const download = document.querySelector('#download');
+    const canvas = document.querySelector('#card');
+    const ctx = canvas.getContext('2d');
+    let currentCard = null;
+
+    function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function buildChips(){
+      const box = document.querySelector('#chips');
+      box.innerHTML = examples.map(e=>`<button class="chip" data-id="${e.id}">${escapeHtml(e.name)}</button>`).join('');
+      box.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+        const item=examples.find(e=>e.id===button.dataset.id);source.value=item.dialogue;statusEl.textContent=`已载入示例：${item.name}`;
+      }));
+    }
+    function matchExample(text){
+      let best=null,bestScore=0;
+      for(const item of examples){
+        let score=0;for(const key of item.keywords){if(text.includes(key))score+=1;}
+        if(score>bestScore){best=item;bestScore=score;}
+      }
+      return best;
+    }
+    function firstSentence(text,regex,fallback=''){
+      const clean=text.replace(/\s+/g,' ').trim();
+      const parts=clean.split(/(?<=[。！？!?])/).map(s=>s.trim()).filter(Boolean);
+      return parts.find(s=>regex.test(s))||fallback||parts[0]||'';
+    }
+    function genericCard(text){
+      const before=firstSentence(text,/以为|觉得|原来|相信|默认/,'我原来以为这件事很简单。');
+      const snag=firstSentence(text,/但|然而|其实|不是|反例|代价|问题|错/,'新的证据让原来的判断站不住。');
+      const after=firstSentence(text,/应该|正确|所以|其实|改为|而是|真正/,'更准确的理解应当重新核对证据。');
+      const takeaway=after.length>56?after.slice(0,56):after;
+      return {title:takeaway,before:before.slice(0,56),snag:snag.slice(0,90),after:after.slice(0,56),takeaway};
+    }
+    function wrapText(text,maxWidth,font){
+      ctx.font=font;const lines=[];let line='';
+      for(const ch of String(text)){
+        const test=line+ch;
+        if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=ch;}else line=test;
+      }
+      if(line)lines.push(line);return lines;
+    }
+    function roundedRect(x,y,w,h,r,fill,stroke){
+      ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+    }
+    function drawCard(card){
+      const W=1080,H=1560;ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+      const pad=64;let y=60;
+      ctx.fillStyle='#17181c';ctx.font='800 54px "Microsoft YaHei","PingFang SC",sans-serif';
+      const titleLines=wrapText(card.title,W-pad*2,ctx.font).slice(0,3);
+      for(const line of titleLines){ctx.fillText(line,pad,y+54);y+=66;}y+=26;
+      const blocks=[['原以为',card.before,'#f5f7fc','#aab3c3','#5c626e'],['撞车',card.sn,'#fff7e9','#a86400','#a86400'],['正解',card.after,'#edf2ff','#2f5cff','#2f5cff'],['一句带走',card.takeaway,'#17181c','#17181c','#ffd666']];
+      const labels=['原以为','撞车','正解','一句带走'];const values=[card.before,card.snag,card.after,card.takeaway];
+      const colors=[['#f5f7fc','#aab3c3','#5c626e'],['#fff7e9','#a86400','#a86400'],['#edf2ff','#2f5cff','#2f5cff'],['#17181c','#17181c','#ffd666']];
+      const available=H-y-92;const gap=22;const heights=[.92,1.18,.92,1.02];const total=heights.reduce((a,b)=>a+b,0);
+      for(let i=0;i<4;i++){
+        const h=(available-gap*3)*heights[i]/total;const [fill,border,labelColor]=colors[i];
+        roundedRect(pad,y,W-pad*2,h,16,fill,'#dce2ee');ctx.fillStyle=border;ctx.fillRect(pad,y,8,h);
+        ctx.fillStyle=labelColor;ctx.font='800 24px "Microsoft YaHei","PingFang SC",sans-serif';ctx.fillText(labels[i],pad+32,y+42);
+        ctx.fillStyle=i===3?'#fff':'#17181c';ctx.font='600 38px "Microsoft YaHei","PingFang SC",sans-serif';
+        const lines=wrapText(values[i],W-pad*2-64,ctx.font);let ty=y+92;
+        for(const line of lines){if(ty>y+h-18)break;ctx.fillText(line,pad+32,ty);ty+=52;}
+        y+=h+gap;
+      }
+      ctx.fillStyle='#8a8f98';ctx.font='500 18px "Microsoft YaHei","PingFang SC",sans-serif';ctx.textAlign='right';ctx.fillText('@han5810xy · make-infographic',W-pad,H-28);ctx.textAlign='left';
+    }
+    function render(){
+      const text=source.value.trim();if(!text){statusEl.textContent='先粘贴一段对话。';return;}
+      const matched=matchExample(text);const card=matched?matched.card:genericCard(text);currentCard=card;drawCard(card);
+      download.disabled=false;matchNote.textContent=matched?`命中内置示例：${matched.name}`:'未命中内置示例，已按简单规则整理。';
+      statusEl.textContent='已生成，可下载 PNG。';
+    }
+    buildChips();source.value=examples[0].dialogue;drawCard(examples[0].card);currentCard=examples[0].card;download.disabled=false;matchNote.textContent='内置示例：好奇心与间隔重复';
+    document.querySelector('#render').addEventListener('click',render);
+    document.querySelector('#clear').addEventListener('click',()=>{source.value='';source.focus();statusEl.textContent='已清空。';});
+    download.addEventListener('click',()=>{if(!currentCard)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='make-infographic.png';document.body.appendChild(a);a.click();a.remove();});
+  </script>
+</body>
+</html>
