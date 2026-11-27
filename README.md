@@ -1,10 +1,13 @@
 # AI 记得每一次对话，你只记得住一张图。
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
+<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" height="405" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="100%" alt="600 字普通总结与四块转弯图的对照" />
-
-**原以为 → 撞车 → 正解 → 一句带走。** 不是摘要，是记录你怎么想通的。
+<table>
+<tr>
+<td width="55%"><a href="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="480" height="300" alt="600 字普通总结与四块转弯图的对照" /></a></td>
+<td><strong>原以为 → 撞车 → 正解 → 一句带走。</strong><br />不是摘要，是记录你怎么想通的。</td>
+</tr>
+</table>
 
 ## 先零安装体验
 
