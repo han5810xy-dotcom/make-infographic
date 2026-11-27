@@ -1,52 +1,65 @@
-# AI remembers every conversation. You remember one image.
+# AI remembers every line. You remember one structure.
 
-<img src="docs/assets/demo.gif?v=5" width="720" height="405" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+<img src="docs/assets/demo.gif?v=6" width="720" height="405" alt="Select a dialogue and generate an evidence-grounded knowledge structure" />
 
-<img src="docs/assets/before-after.png?v=2" width="720" height="450" alt="A 600-character summary beside the four-part turn card" />
+<img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="A plain summary beside an evidence-grounded knowledge atlas" />
+
+Download [install.mjs](dist/install.mjs) and [make-infographic-2.0.0.zip](dist/make-infographic-2.0.0.zip) into the same folder, then run:
 
 ```powershell
-curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.1.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.1/make-infographic-1.0.1.zip; node install.mjs
+node install.mjs
 ```
 
-**Before → Collision → Correction → Takeaway.** Not a summary — a record of how your thinking changed.
+**Structure first. Pixels second.** Every proposition, relation, and gap points back to a source sentence. Nothing jumps directly from text to an image.
 
-## Install
+## Three entry points
 
-- With `pnpm`: the installer uses pnpm first, preserving the original working path.
-- Without pnpm: it tries `corepack pnpm`, then falls back to `npm` / `npm.cmd` to install dependencies.
-- With none of them: it prints three routes — `npm i -g pnpm`, `corepack enable`, or manual extraction with `--html-only` — instead of only telling you to install something.
+- **Qwen browser extension**: captures the visible conversation and visible thinking as one Trace.
+- **Qoder / DSH Skill**: select a dialogue and say **出图**.
+- **Paste / file import**: Markdown, plain text, and common JSON exports.
 
-Try it without installing: https://han5810xy-dotcom.github.io/make-infographic/
+All three routes produce the same complete Trace before entering the same structure workflow.
 
-Release v1.0.1: https://github.com/han5810xy-dotcom/make-infographic/releases/tag/v1.0.1
+## Eight steps
 
-Then select a conversation in Qoder and say: **出图**.
+1. Read the full dialogue and preserve turn indices.
+2. Score repetition, follow-up, correction, and position.
+3. Split content into single-assertion propositions with verbatim evidence.
+4. Connect propositions only when the source states the relation.
+5. Extract a 3–5 proposition backbone; declare parallel lists instead of inventing a spine.
+6. Choose flow, tree, matrix, network, cycle, or forest from topology.
+7. Check evidence, direction, layer, node limits, gaps, and cross-view consistency.
+8. Render a main view, branch details, and a knowledge atlas.
 
-## Three examples
+## One visual grammar
 
-<p align="center">
-  <a href="examples/01-curiosity/"><img src="docs/assets/01-curiosity.png?v=2" width="220" alt="Curiosity and spaced repetition" /></a>
-  <a href="examples/02-skip-signal/"><img src="docs/assets/02-skip-signal.png?v=2" width="220" alt="Skipping is evidence" /></a>
-  <a href="examples/03-repeat-node/"><img src="docs/assets/03-repeat-node.png?v=2" width="220" alt="Repeat nodes, not cards" /></a>
-</p>
+Rectangles are propositions, circles are concepts, diamonds are judgments or conditions, hexagons are examples, and dashed boxes are inferences or gaps. Solid arrows mean causation, dashed arrows mean support, double arrows mean contrast, brackets mean containment, and orthogonal branches mean conditions. Blue marks the backbone and corrections, orange marks conflict and exceptions, gray marks background, and red marks refuted claims. Every view carries a quote / summary / inference badge.
 
-- [Curiosity and spaced repetition](examples/01-curiosity/): the forgetting curve is also a curiosity supply curve.
-- [Skipping is evidence](examples/02-skip-signal/): a skipped probe is behavioral data, not noise.
-- [Repeat nodes, not cards](examples/03-repeat-node/): keep the schedule, change the payload.
+The turn band remains available: **Before → Collision → Correction → Takeaway**.
 
-## Ten-minute validation
+## Website
 
-**Pending.** The author has not yet run the delayed-recall experiment with 10 real conversations and a three-day gap, so no number is claimed here.
+- [Card library](site/web/library.html): search by topic, date, status, and keyword.
+- [Knowledge structure](site/web/structure.html): move from atlas to backbone to evidence.
+- [Profile](site/web/profile.html): output history, topic distribution, and timeline.
+- [Ambient art](site/web/ambient.html): a separate decorative and commemorative output, stored separately from infographics.
 
-Engineering checks are complete: clean install from the exact ZIP, natural-language trigger in Qoder, real dialogue rendering, resource reads, invalid-input rejection, PNG download, and mobile layout. Engineering success is not proof of learning effectiveness.
+## Acceptance numbers
+
+- 50 private real dialogues: 453 propositions and 28 relations; every final relation passed independent model audit against its source sentence.
+- Key-conclusion coverage: 91.3%. Topology consistency: 100%. Cross-view wording errors: 0.
+- 97 images, 0 HTML fallbacks, 100% output rate.
+- 101 cards imported into the website; local search took 0.8ms and every card links to its source dialogue.
+
+These are engineering and structure-acceptance numbers, not proof of learning effectiveness. Private dialogues and evaluation data are excluded from public packages. Live Qoder/Qwen login-state checks and human expert review remain separate.
 
 ## Boundaries
 
-- Visible body text is capped at 300 characters; overflow is trimmed without shrinking type, truncation, or ellipses.
-- Missing Before, Collision, or Correction blocks stop rendering instead of inventing a twist.
-- Non-verbatim text is marked as a summary in JSON and terminal output only.
+- Split structures above 30 propositions by topic.
+- Delete relations without a source sentence and record them as gaps; never connect an example to a main conclusion as causation.
+- Main views have at most 7 nodes; detail views have at most 12.
+- Failures degrade to another view, split views, or HTML only. Validation failure is never a deliverable.
 - Uses installed Edge or Chrome; never downloads Chromium and needs no API key.
-- Without a browser, only HTML can be generated and is explicitly marked untested.
 
 ## License
 

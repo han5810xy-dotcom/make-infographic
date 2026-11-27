@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { inflateRawSync } from "node:zlib";
 
-const VERSION = "1.0.1";
+const VERSION = "2.0.0";
 const ZIP_NAME = `make-infographic-${VERSION}.zip`;
 const scriptDirectory = (() => {
   try { return dirname(fileURLToPath(import.meta.url)); } catch { return process.cwd(); }

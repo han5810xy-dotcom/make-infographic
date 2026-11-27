@@ -1,0 +1,260 @@
+{
+  "topic": "解释性深度错觉：熟悉不是理解",
+  "headline": "你不是懂了，你只是熟悉",
+  "subhead": "解释性深度错觉：熟悉不是理解",
+  "propositions": [
+    {
+      "id": "p1",
+      "kind": "定义",
+      "text": "解释性深度错觉是高估理解，直到解释才发现漏洞",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "我们常常高估自己对一个事物运行机制的理解，直到真正尝试解释它，才发现漏洞。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.75
+    },
+    {
+      "id": "p2",
+      "kind": "数据",
+      "text": "参与者逐步解释后，对自己的理解信心下降",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "但被要求逐步说明后，他们往往只能描述用途和大致现象，说不清内部零件如何相互作用。看过完整解释后，再评价自己的理解，信心通常会明显下降。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.6
+    },
+    {
+      "id": "p3",
+      "kind": "主张",
+      "text": "熟悉用途不等于理解机制",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.8
+    },
+    {
+      "id": "p4",
+      "kind": "例子",
+      "text": "自行车平衡解释在追问受力后暴露漏洞",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "但一旦追问具体受力、转向和陀螺效应如何共同作用，就可能发现自己的解释只是几个听起来合理的词。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.65
+    },
+    {
+      "id": "p5",
+      "kind": "对比",
+      "text": "达克效应高估整体能力，解释性深度错觉高估具体机制",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "**达克效应**偏向对自身整体能力的高估。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "**解释性深度错觉**偏向对**某个具体对象为何如此运作**的高估。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.6
+    },
+    {
+      "id": "p6",
+      "kind": "步骤",
+      "text": "检验理解不能只问懂了吗，要独立讲出机制、步骤或因果链",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "检验理解不能只问“懂了吗”，而要让对方**独立讲出机制、步骤或因果链**。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.85
+    },
+    {
+      "id": "p7",
+      "kind": "主张",
+      "text": "能说出用途不等于能回答为什么",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.7
+    },
+    {
+      "id": "p8",
+      "kind": "主张",
+      "text": "熟悉用途、记得名称、见过运转就是理解机制",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "熟悉用途、记得名称、见过它运转，被误当成了理解机制。",
+          "verbatim": true
+        }
+      ],
+      "provenance": "summary",
+      "weight": 0.9
+    }
+  ],
+  "relations": [
+    {
+      "id": "r1",
+      "from": "p8",
+      "to": "p3",
+      "kind": "反驳",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "熟悉用途、记得名称、见过它运转，被误当成了理解机制。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "strength": 0.95
+    },
+    {
+      "id": "r2",
+      "from": "p3",
+      "to": "p6",
+      "kind": "支持",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "检验理解不能只问“懂了吗”，而要让对方**独立讲出机制、步骤或因果链**。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "strength": 0.9
+    },
+    {
+      "id": "r3",
+      "from": "p6",
+      "to": "p7",
+      "kind": "支持",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "检验理解不能只问“懂了吗”，而要让对方**独立讲出机制、步骤或因果链**。能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "strength": 0.9
+    },
+    {
+      "id": "r4",
+      "from": "p4",
+      "to": "p3",
+      "kind": "支持",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "例如，对“自行车为什么能保持平衡”，很多人觉得自己能解释；但一旦追问具体受力、转向和陀螺效应如何共同作用，就可能发现自己的解释只是几个听起来合理的词。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
+          "verbatim": true
+        }
+      ],
+      "strength": 0.85
+    },
+    {
+      "id": "r5",
+      "from": "p5",
+      "to": "p1",
+      "kind": "对比",
+      "evidence": [
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "我们常常高估自己对一个事物运行机制的理解，直到真正尝试解释它，才发现漏洞。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "它和“达克效应”有关，但不同：",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "**达克效应**偏向对自身整体能力的高估。",
+          "verbatim": true
+        },
+        {
+          "speaker": "assistant",
+          "turn_index": 1,
+          "text": "**解释性深度错觉**偏向对**某个具体对象为何如此运作**的高估。",
+          "verbatim": true
+        }
+      ],
+      "strength": 0.9
+    }
+  ],
+  "gaps": [
+    {
+      "missing": "没有给出跨文化的复现实验",
+      "why": "对话只引用 Rozenblit 与 Keil 2002 的原始研究。"
+    }
+  ],
+  "key_conclusions": [
+    "我们常常高估自己对一个事物运行机制的理解，直到真正尝试解释它，才发现漏洞。",
+    "熟悉用途、记得名称、见过它运转，被误当成了理解机制。",
+    "检验理解不能只问“懂了吗”，而要让对方**独立讲出机制、步骤或因果链**。",
+    "能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。"
+  ],
+  "weight_source": "authored",
+  "overview": true
+}

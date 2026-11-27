@@ -1,0 +1,12 @@
+{
+  "schema_version": "ambient-art.v1",
+  "id": "ambient_ioed_v1",
+  "type": "ambient",
+  "purpose": "装饰与纪念，不承载知识结构、证据或关系",
+  "source_trace": "infographics/解释性深度错觉.source.md",
+  "source_title": "解释性深度错觉",
+  "file": "ioed-ambient-v1.png",
+  "separate_from_infographics": true,
+  "prompt": "白底极简编辑插画：两个几乎重叠的抽象层被一道狭窄裂缝分开，一层平滑熟悉，另一层显露复杂隐藏机制；克制的蓝黑与暖琥珀色，安静、内省；无文字、无图标、无渐变、无阴影、无信息图元素。",
+  "generated_at": "2026-11-28T00:00:00.000Z"
+}

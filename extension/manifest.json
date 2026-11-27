@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "对话 → 知识结构",
+  "version": "0.1.0",
+  "description": "捕获 Qwen 可见对话与可见思考，统一成可追溯 Trace，交给本机 Skill 出图。",
+  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "host_permissions": ["https://*.qwen.ai/*", "http://127.0.0.1:5278/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "对话 → 知识结构",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.qwen.ai/*"],
+      "js": ["trace-core.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

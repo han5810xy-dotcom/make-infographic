@@ -1,52 +1,65 @@
-# AI 记得每一次对话，你只记得住一张图。
+# AI 记得每一句，你只记住一套结构。
 
-<img src="docs/assets/demo.gif?v=5" width="720" height="405" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
+<img src="docs/assets/demo.gif?v=6" width="720" height="405" alt="选中一段对话，生成有证据的知识结构图" />
 
-<img src="docs/assets/before-after.png?v=2" width="720" height="450" alt="600 字普通总结与四块转弯图的对照" />
+<img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="普通总结与有证据的知识结构总览对照" />
+
+下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.0.0.zip](dist/make-infographic-2.0.0.zip)，放在同一个文件夹，然后运行：
 
 ```powershell
-curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.1.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.1/make-infographic-1.0.1.zip; node install.mjs
+node install.mjs
 ```
 
-**原以为 → 撞车 → 正解 → 一句带走。** 不是摘要，是记录你怎么想通的。
+**先立命题与关系，再决定它长成什么图。** 不是从文字直接跳像素，而是让每个结论、每条边、每个缺口都能回到原句。
 
-## 安装
+## 三种入口
 
-- 有 `pnpm`：安装器优先使用 pnpm，原来的安装路径保持不变。
-- 没有 pnpm：自动尝试 `corepack pnpm`，再自动使用 `npm` / `npm.cmd` 安装依赖。
-- 三个都没有：打印 `npm i -g pnpm`、`corepack enable`、手动解压后 `--html-only` 三条路线，不会只说“装好再来”。
+- **Qwen 浏览器扩展**：捕获当前可见会话与可见思考，统一成 Trace。
+- **Qoder / DSH Skill**：选中一段对话，说「出图」。
+- **粘贴／文件导入**：Markdown、纯文本、常见 JSON 导出。
 
-零安装体验：https://han5810xy-dotcom.github.io/make-infographic/
+同一段对话三条路都得到完整 Trace，再进入同一条结构工作流。
 
-Release v1.0.1：https://github.com/han5810xy-dotcom/make-infographic/releases/tag/v1.0.1
+## 八步工作流
 
-装好后，在 Qoder 里选中一段对话，说：**出图**。
+1. 完整浏览对话并保留轮次。
+2. 分析重复度、追问度、纠正度、位置度。
+3. 把内容拆成单条命题，每块附原句证据。
+4. 只在命题之间建立有出处的关系。
+5. 抽出 3~5 条主干；并列清单明确降级，不硬造骨架。
+6. 由拓扑决定流程图、树状图、矩阵、知识关联图、循环图或森林图。
+7. 检查来源、方向、层级、节点数、缺口与多图一致性。
+8. 输出主图、分支细节图与知识总览。
 
-## 三个示例
+## 一套语法，跨图一致
 
-<p align="center">
-  <a href="examples/01-curiosity/"><img src="docs/assets/01-curiosity.png?v=2" width="220" alt="好奇心与间隔重复" /></a>
-  <a href="examples/02-skip-signal/"><img src="docs/assets/02-skip-signal.png?v=2" width="220" alt="跳过行为是证据" /></a>
-  <a href="examples/03-repeat-node/"><img src="docs/assets/03-repeat-node.png?v=2" width="220" alt="重复节点，不重复卡片" /></a>
-</p>
+矩形是命题，圆是概念，菱形是判断／条件，六边形是例子，虚线框是推断／缺口；实线箭头是因果，虚线箭头是支持，双向箭头是对比，方括号是包含，折线是条件分支。蓝色给主干与纠正，橙色给冲突与例外，灰色给背景，红色给被推翻的判断。每张图都带原话／归纳／推断角标。
 
-- [好奇心与间隔重复](examples/01-curiosity/)：艾宾浩斯曲线不是记忆衰减表，而是一条好奇心供给曲线。
-- [跳过行为是证据](examples/02-skip-signal/)：用户跳过探针不是噪声，是系统信息量最高的行为数据之一。
-- [重复节点，不重复卡片](examples/03-repeat-node/)：Anki 重复卡片，你重复节点；排期算法一样，载荷每次是新的。
+转折带保留为一种图种：**原以为 → 撞车 → 正解 → 一句带走**。
 
-## 十分钟验证
+## 网站汇总
 
-**待验证。** 作者尚未完成“10 段真实对话 → 三天后只看图复述”的延迟实验，因此不填虚构数字。
+- [卡片库](site/web/library.html)：主题、时间、状态与关键词检索。
+- [知识结构](site/web/structure.html)：从总览进入主干，再沿证据进入细节。
+- [个人档案](site/web/profile.html)：出图历史、主题分布与时间线。
+- [意境图](site/web/ambient.html)：独立第二出口，只做装饰与纪念，与信息图分开存储。
 
-当前已完成的是工程验收：准确 ZIP 全新安装、Qoder 自然语言触发、真实对话出图、引用资源读取、异常输入拒绝、PNG 下载与移动端布局。工程通过不等于学习效果已被证明。
+## 验收数字
+
+- 50 段私有真实对话：453 条命题、28 条关系；最终关系全部通过独立模型原句审计。
+- 关键结论覆盖率 91.3%；图种拓扑一致率 100%；多图编号与措辞错误 0。
+- 输出 97 张图，HTML 降级 0，出图率 100%。
+- 101 张卡片导入网站后，本地检索 0.8ms；每张卡都有来源对话链接。
+
+这些是工程与结构验收数字，不等于学习效果已被证明。私有对话与验收数据不进入公开发布包；真实 Qwen 登录态和人类专家复核仍需单独确认。
 
 ## 边界
 
-- 单张可见正文不超过 300 字；超限自动裁剪，不缩字号、不截断、不用省略号。
-- 缺少「原以为」「撞车」或「正解」时拒绝出图，不编造反转。
-- 非逐字内容标为「归纳」，只进入 JSON 与终端，不画到图上。
-- 使用本机 Edge 或 Chrome；不会自动下载 Chromium，不需要 API Key。
-- 浏览器不可用时只能生成 HTML，并明确标注「未实测」。
+- 命题超过 30 条就按主题拆分。
+- 关系没有原句就删掉，并写进缺口；例子不能与主结论连成因果。
+- 主图不超过 7 个节点，细节图不超过 12 个。
+- 任何失败都走换视图、拆图或只出 HTML，禁止把校验失败当成交付。
+- 使用本机 Edge 或 Chrome；不会自动下载 Chromium，不需要 API key。
 
 ## License
 

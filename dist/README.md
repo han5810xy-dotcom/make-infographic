@@ -1,89 +1,75 @@
-# 对话出图（make-infographic）1.0.1
+# 对话 → 知识结构（make-infographic）2.0.0
 
-把一段 AI 对话变成一张竖图：**原以为 → 撞车 → 正解 → 一句带走**。
+先立命题与关系，再决定它长成什么图。每个结论、每条边、每个缺口都能回到原句。
 
-不是摘要配图，而是记录你怎样想通。所有内容只留在本机，不需要 API key，也不会上传对话。
+## 安装
 
-## 最简单安装
-
-下载这个文件夹里的两个文件：
-
-- `install.mjs`
-- `make-infographic-1.0.1.zip`
-
-打开 PowerShell，进入下载文件所在文件夹，运行：
+把 `install.mjs` 和 `make-infographic-2.0.0.zip` 放在同一个文件夹，运行：
 
 ```powershell
 node install.mjs
 ```
 
-安装脚本会自动找到 Qoder、Claude 或 DSH 的技能目录，检查 Node 和 Edge / Chrome，并安装截图依赖。依赖安装按以下顺序尝试：
+安装器会查找 Qoder／Claude／DSH 技能目录，检查 Node 20+ 和 Edge／Chrome，并安装截图依赖。不会自动下载 Chromium。
 
-1. 有 `pnpm`：直接用 pnpm。
-2. 没有 pnpm：尝试 `corepack pnpm`。
-3. 还没有：自动用 `npm`；Windows 下也会尝试 `npm.cmd`。
-4. 三个都没有：打印三条可执行路线，不会只让你“装好再来”。
+## 使用
 
-装成功后，会打印：
-
-```text
-装依赖用的：pnpm
-装好了。在 Qoder 里选中一段文字，说『出图』。
-```
-
-实际第二行可能是 `corepack` 或 `npm`，取决于这台电脑可用的工具。
-
-## 手动安装
-
-1. 把 `make-infographic-1.0.1.zip` 解压。
-2. 将里面的 `make-infographic` 文件夹放进下面任意一个目录：
-   - `C:\Users\你的名字\.qoder-cn\skills\`
-   - `C:\Users\你的名字\.claude\skills\`
-   - `C:\Users\你的名字\.dsh\skills\`
-3. 在 Qoder 终端里进入技能目录，运行下面任意一条：
-
-```bat
-cd /d "%USERPROFILE%\.qoder-cn\skills\make-infographic"
-pnpm add puppeteer-core
-```
-
-```bat
-npm install --no-save --no-audit --no-fund puppeteer-core
-```
-
-如果三个包管理器都没有，可先手动解压，出图时加 `--html-only`，再用浏览器把 HTML 打印成 PNG。
-
-## 怎么用
-
-回到任意 Qoder 对话，选中一段问答、讨论或笔记，对它说：**出图**。
-
-也可以直接运行：
+在 Qoder／DSH 中选中一段对话，说「出图」。也可以直接运行：
 
 ```bat
 node "%USERPROFILE%\.qoder-cn\skills\make-infographic\scripts\make.mjs" --in "对话.md" --out "主题"
 ```
 
-成功时终端最后一行是 `OK`，当前工作目录的 `infographics/` 中会有：
+零 key 示例：
 
-- `<主题>.png`：唯一默认图；
-- `<主题>.html`：同版式网页投影；
-- `<主题>.json`：完整转弯记录、来源标记、未上图清单与检查结果；
-- `<主题>.source.md`：归档原文。
+```bat
+node "%USERPROFILE%\.qoder-cn\skills\make-infographic\scripts\make.mjs" --demo
+```
 
-## 它会自动处理什么
+成功时最后一行是 `OK`。产物在 `infographics/`：
 
-- 缺「原以为」「撞车」或「正解」：不出图，并说清缺哪一块。
-- 正文超过 300 字：自动裁剪，终端打印「未上图」清单；不缩字、不截断、不用省略号。
-- 原话不逐字：自动标为「归纳」，只写进 JSON 和终端，不画到图上。
-- 传入旧版式：自动换成四块转弯图。
-- 1080px 主稿正文 38px，缩到 600px 宽约 21.1px。
+- `*-v1.png`：主图；
+- `*-v2.png`：分支细节图；
+- `*-v3.png`：知识总览；
+- 对应的 `.svg`、`.html`；
+- `.json`：完整 Structure；
+- `.evidence.json`：quote_id 到原句的索引；
+- `.source.md`：归档原文。
 
-## 常见问题
+旧版 turn card 保留在 `scripts/make-turn-card.mjs`，不再是默认入口。
 
-- **没有 Node**：先安装 Node 20 或更高版本，再重跑 `node install.mjs`。
-- **没有 pnpm / corepack / npm**：安装器会打印 `npm i -g pnpm`、`corepack enable` 和手动 `--html-only` 三条路线。
-- **没有 Edge 或 Chrome**：安装其中一个，再重跑。脚本不会自动下载 Chromium。
-- **找不到浏览器**：设置 `BROWSER_PATH` 指向 `msedge.exe` 或 `chrome.exe`。
-- **浏览器暂时打不开**：可加 `--html-only`，只生成 HTML 并明确标注「未实测」。
+## 作者结构
 
-完整 JSON 与归档原文是主资产；只剩 PNG 时可以看，但不能可靠地改措辞或重出。
+模型先读完整对话，写 Proposition／Relation／Structure；脚本只做证据解析、校验、降级与渲染。作者稿示例：
+
+```json
+{
+  "topic": "分数与理解",
+  "propositions": [
+    {
+      "id": "p1",
+      "kind": "主张",
+      "text": "分数高说明学习有效",
+      "evidence": [{ "speaker": "user", "turn_index": 0, "text": "我以为分数高就说明学习有效。", "verbatim": true }],
+      "provenance": "summary"
+    }
+  ],
+  "relations": [],
+  "gaps": [],
+  "key_conclusions": ["我以为分数高就说明学习有效。"]
+}
+```
+
+用 `scripts/knowledge.mjs resolve` 解析证据，用 `scripts/knowledge.mjs workflow` 跑八步工作流。
+
+## 复习与卡片库
+
+已有 101 张卡、探针排期、关键词／日期／主题／状态检索继续保留。网站源码在 `site/web/`，提供卡片库、知识结构、个人档案、时间线与独立意境图页面。
+
+## 边界
+
+- 命题最多 30 条，超限按主题拆分。
+- 每条关系必须有讲述它的原句；弱关系不进主图。
+- 主图最多 7 个节点，细节图最多 12 个。
+- 失败时换视图、拆图或只出 HTML，禁止把校验失败当成交付。
+- 工程验收不等于学习效果验证。

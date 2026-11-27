@@ -2,3 +2,6 @@ node_modules/
 .DS_Store
 *.log
 *.tmp
+eval/
+dist/package/
+dist/qwen-trace-extension-*.zip
