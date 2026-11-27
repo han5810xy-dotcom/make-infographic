@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 
-export const VERSION = '2.1.0';
+export const VERSION = '2.1.1';
 export const ARCHIVE_NAME = `make-infographic-${VERSION}.zip`;
 export const REQUIRED_FILES = Object.freeze([
   'SKILL.md',

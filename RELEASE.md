@@ -1,4 +1,4 @@
-# Release 2.1.0
+# Release 2.1.1
 
 这一版把产品从“对话转知识图”推进到“跨对话知识积累与学习证据”。
 
@@ -20,6 +20,8 @@
 - 导入正文变化或扩展重新捕获失败时，旧 Trace 立即失效。
 - 私有 `.knowledge/`、桥接令牌和本地产物加入 Git 忽略规则。
 - 旧复习确认不能反复消费同一答案拉长间隔。
+- 公共站新增白名单公开作品页与导入器；私有证据、原句、学习事件和状态会被拒绝。
+- Windows 升级改用备份后复制并重建依赖，避开目录重排与符号链接权限问题。
 
 ## 边界
 
@@ -27,6 +29,6 @@
 
 ## 文件
 
-- `dist/make-infographic-2.1.0.zip`
+- `dist/make-infographic-2.1.1.zip`
 - `dist/install.mjs`
 - `dist/qwen-trace-extension-0.1.0.zip`

@@ -90,7 +90,7 @@ node "$SKILL/scripts/learn.mjs" import --in 学习包.json
 node "$SKILL/scripts/publish.mjs" --structure 结构.json --out 公开目录 --consent "我确认发布"
 ```
 
-公开产物只含命题、关系与可选图片，不含原句 evidence、来源路径、学习事件或自述答案。
+公开产物只含命题、关系与可选图片，不含原句 evidence、来源路径、学习事件或自述答案。把产物目录交给站点维护者后，可用 `site/tools/import-published.mjs` 导入公共作品页；导入器会再次拒绝私有字段，只更新自己生成的公开文件。
 
 学习状态是私有数据，不进入公开网站或发布包。工程检查只能证明结构、证据与链路没有退化，不能证明学习效果。
 

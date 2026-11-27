@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="A plain summary beside an evidence-grounded knowledge atlas" />
 
-Download [install.mjs](dist/install.mjs) and [make-infographic-2.1.0.zip](dist/make-infographic-2.1.0.zip) into the same folder, then run:
+Download [install.mjs](dist/install.mjs) and [make-infographic-2.1.1.zip](dist/make-infographic-2.1.1.zip) into the same folder, then run:
 
 ```powershell
 node install.mjs
@@ -62,7 +62,7 @@ The workbench collects the answer before revealing the source proposition and ev
 
 - 50 private real dialogues: 471 propositions and 28 audited relations; 457 rendered images with 0 HTML fallbacks.
 - Key-conclusion coverage: 91.3%. Topology consistency: 100%. Cross-view wording errors: 0.
-- 24 render-width checks and 14 website checks; installers validate CRCs, stage changes, and roll back failures.
+- 24 render-width checks and 16 website checks; installers validate CRCs, stage changes, and roll back failures.
 - Learning regressions cover cross-session identity, retrieval before reveal, append-only answers, export/restore, and concurrent writes.
 
 These are engineering and structure-acceptance numbers, not proof of learning effectiveness. Private dialogues, answers, and evaluation data are excluded from public packages. Live Qwen extension checks and human expert review remain separate.

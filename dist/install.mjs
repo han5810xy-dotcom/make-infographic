@@ -7,8 +7,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const CONTRACT = {
-  "VERSION": "2.1.0",
-  "ARCHIVE_NAME": "make-infographic-2.1.0.zip",
+  "VERSION": "2.1.1",
+  "ARCHIVE_NAME": "make-infographic-2.1.1.zip",
   "REQUIRED_FILES": [
     "SKILL.md",
     "package.json",

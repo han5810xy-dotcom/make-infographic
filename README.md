@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="普通总结与有证据的知识结构总览对照" />
 
-下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.1.0.zip](dist/make-infographic-2.1.0.zip)，放在同一个文件夹，然后运行：
+下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.1.1.zip](dist/make-infographic-2.1.1.zip)，放在同一个文件夹，然后运行：
 
 ```powershell
 node install.mjs
@@ -62,7 +62,7 @@ node scripts/learn.mjs serve --port 5279
 
 - 50 段私有真实对话：471 条命题、28 条经核对关系；最终输出 457 张图，HTML 降级 0。
 - 关键结论覆盖率 91.3%；图种拓扑一致率 100%；多图编号与措辞错误 0。
-- 24 组渲染宽度检查、14 组网页检查；安装包支持 CRC 校验、暂存安装与失败回滚。
+- 24 组渲染宽度检查、16 组网页检查；安装包支持 CRC 校验、暂存安装与失败回滚。
 - 学习回路覆盖跨会话身份、先提取后揭示、追加式作答、导出／恢复与并发写入。
 
 这些是工程与结构验收数字，不等于学习效果已被证明。私有对话、学习答案与验收数据不进入公开发布包；真实 Qwen 登录态和人类专家复核仍需单独确认。

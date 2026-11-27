@@ -1,10 +1,10 @@
-# 对话 → 知识结构（make-infographic）2.1.0
+# 对话 → 知识结构（make-infographic）2.1.1
 
 先立命题与关系，再决定它长成什么图。每个结论、每条边、每个缺口都能回到原句。
 
 ## 安装
 
-把 `install.mjs` 和 `make-infographic-2.1.0.zip` 放在同一个文件夹，运行：
+把 `install.mjs` 和 `make-infographic-2.1.1.zip` 放在同一个文件夹，运行：
 
 ```powershell
 node install.mjs
