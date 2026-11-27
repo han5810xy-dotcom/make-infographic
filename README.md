@@ -1,42 +1,33 @@
 # AI 记得每一次对话，你只记得住一张图。
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" height="405" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
+<img src="docs/assets/demo.gif?v=5" width="720" height="405" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
 
-<table>
-<tr>
-<td width="55%"><a href="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="480" height="300" alt="600 字普通总结与四块转弯图的对照" /></a></td>
-<td><strong>原以为 → 撞车 → 正解 → 一句带走。</strong><br />不是摘要，是记录你怎么想通的。</td>
-</tr>
-</table>
-
-## 先零安装体验
-
-[https://han5810xy-dotcom.github.io/make-infographic/](https://han5810xy-dotcom.github.io/make-infographic/)
-
-粘贴一段对话，点「出图」，直接渲染并下载 PNG。纯前端，不调模型，文本不离开浏览器。
-
-## 一行安装
-
-Windows PowerShell：
+<img src="docs/assets/before-after.png?v=2" width="720" height="450" alt="600 字普通总结与四块转弯图的对照" />
 
 ```powershell
-curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.0.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.0/make-infographic-1.0.0.zip; node install.mjs
+curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.1.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.1/make-infographic-1.0.1.zip; node install.mjs
 ```
 
-macOS / Linux：
+**原以为 → 撞车 → 正解 → 一句带走。** 不是摘要，是记录你怎么想通的。
 
-```bash
-curl -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs && curl -L -o make-infographic-1.0.0.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.0/make-infographic-1.0.0.zip && node install.mjs
-```
+## 安装
+
+- 有 `pnpm`：安装器优先使用 pnpm，原来的安装路径保持不变。
+- 没有 pnpm：自动尝试 `corepack pnpm`，再自动使用 `npm` / `npm.cmd` 安装依赖。
+- 三个都没有：打印 `npm i -g pnpm`、`corepack enable`、手动解压后 `--html-only` 三条路线，不会只说“装好再来”。
+
+零安装体验：https://han5810xy-dotcom.github.io/make-infographic/
+
+Release v1.0.1：https://github.com/han5810xy-dotcom/make-infographic/releases/tag/v1.0.1
 
 装好后，在 Qoder 里选中一段对话，说：**出图**。
 
 ## 三个示例
 
 <p align="center">
-  <a href="examples/01-curiosity/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/01-curiosity.png?v=1" width="220" alt="好奇心与间隔重复" /></a>
-  <a href="examples/02-skip-signal/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/02-skip-signal.png?v=1" width="220" alt="跳过行为是证据" /></a>
-  <a href="examples/03-repeat-node/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/03-repeat-node.png?v=1" width="220" alt="重复节点，不重复卡片" /></a>
+  <a href="examples/01-curiosity/"><img src="docs/assets/01-curiosity.png?v=2" width="220" alt="好奇心与间隔重复" /></a>
+  <a href="examples/02-skip-signal/"><img src="docs/assets/02-skip-signal.png?v=2" width="220" alt="跳过行为是证据" /></a>
+  <a href="examples/03-repeat-node/"><img src="docs/assets/03-repeat-node.png?v=2" width="220" alt="重复节点，不重复卡片" /></a>
 </p>
 
 - [好奇心与间隔重复](examples/01-curiosity/)：艾宾浩斯曲线不是记忆衰减表，而是一条好奇心供给曲线。

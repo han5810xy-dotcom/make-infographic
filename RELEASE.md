@@ -1,18 +1,25 @@
-# Release 1.0.0
+# Release 1.0.1
 
-## 这一版是什么
+## 这一版只改安装器
 
-`make-infographic` 把一段对话收敛成一张四块转弯图：
+**出图、校验、模板和版式逻辑一字未变。**
 
-**原以为 → 撞车 → 正解 → 一句带走**
+v1.0.0 的外部实测暴露了两个安装链路问题：只检测 pnpm / corepack，漏掉 npm；解压后若依赖没有真正安装，直接运行会找不到 `puppeteer-core`。v1.0.1 只修复这两件事。
 
-默认只有这一种版式。旧版树图、因果图、流程、矩阵、关系图和卡片图不进入安装包。
+## 安装器变化
 
-## 安装
+- 检测顺序改为：`pnpm` → `corepack pnpm` → `npm` → `npm.cmd`。
+- 有 npm 时自动执行 `npm install --no-save --no-audit --no-fund puppeteer-core`。
+- 三个包管理器都没有时，不再只说“装好再来”，而是打印三条路线：
+  1. `npm i -g pnpm`
+  2. `corepack enable`
+  3. 手动解压，出图时加 `--html-only`，再用浏览器把 HTML 打印成 PNG。
+- 成功时额外打印实际使用的安装器：`装依赖用的：pnpm / corepack / npm`。
+- 原来的 pnpm 路径保持不变。
 
-下载：
+## 下载
 
-- `make-infographic-1.0.0.zip`
+- `make-infographic-1.0.1.zip`
 - `install.mjs`
 
 把两个文件放在同一文件夹，运行：
@@ -21,33 +28,26 @@
 node install.mjs
 ```
 
-成功时输出：
+成功时最后一行是：
 
 ```text
 装好了。在 Qoder 里选中一段文字，说『出图』。
 ```
 
-## 本版边界
+## 产品边界不变
 
 - 单张可见正文不超过 300 字。
 - 超限自动裁剪，并打印「未上图」清单。
 - 不缩字号、不截断、不用省略号。
 - 1080px 主稿正文 38px；600px 宽约 21.1px。
 - 缺少「原以为」「撞车」或「正解」时拒绝出图。
-- 非逐字内容标为「归纳」，只进入 JSON 和终端。
+- 非逐字内容标为「归纳」，只进入 JSON 与终端。
 - 使用本机 Edge 或 Chrome，不自动下载 Chromium。
 - 不需要 API key，对话不上传。
 
-## 验证
-
-- 隔离目录真实安装成功。
-- 安装后 `--demo` 成功生成 PNG、HTML、JSON 和归档原文。
-- 终端最后一行：`OK`。
-- 三段真实对话示例随仓库提供。
-
 ## 文件
 
-- `dist/make-infographic-1.0.0.zip`
+- `dist/make-infographic-1.0.1.zip`
 - `dist/install.mjs`
 - `dist/README.md`
 - `examples/01-curiosity/`

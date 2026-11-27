@@ -1,42 +1,33 @@
 # AI remembers every conversation. You remember one image.
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" height="405" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+<img src="docs/assets/demo.gif?v=5" width="720" height="405" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
 
-<table>
-<tr>
-<td width="55%"><a href="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="480" height="300" alt="A 600-character summary beside the four-part turn card" /></a></td>
-<td><strong>Before → Collision → Correction → Takeaway.</strong><br />Not a summary — a record of how your thinking changed.</td>
-</tr>
-</table>
-
-## Try it without installing
-
-[https://han5810xy-dotcom.github.io/make-infographic/](https://han5810xy-dotcom.github.io/make-infographic/)
-
-Paste a conversation, click 出图, and download the PNG. It runs entirely in your browser, calls no model, and never uploads your text.
-
-## One-line install
-
-Windows PowerShell:
+<img src="docs/assets/before-after.png?v=2" width="720" height="450" alt="A 600-character summary beside the four-part turn card" />
 
 ```powershell
-curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.0.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.0/make-infographic-1.0.0.zip; node install.mjs
+curl.exe -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs; curl.exe -L -o make-infographic-1.0.1.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.1/make-infographic-1.0.1.zip; node install.mjs
 ```
 
-macOS / Linux:
+**Before → Collision → Correction → Takeaway.** Not a summary — a record of how your thinking changed.
 
-```bash
-curl -L -o install.mjs https://raw.githubusercontent.com/han5810xy-dotcom/make-infographic/main/dist/install.mjs && curl -L -o make-infographic-1.0.0.zip https://github.com/han5810xy-dotcom/make-infographic/releases/download/v1.0.0/make-infographic-1.0.0.zip && node install.mjs
-```
+## Install
+
+- With `pnpm`: the installer uses pnpm first, preserving the original working path.
+- Without pnpm: it tries `corepack pnpm`, then falls back to `npm` / `npm.cmd` to install dependencies.
+- With none of them: it prints three routes — `npm i -g pnpm`, `corepack enable`, or manual extraction with `--html-only` — instead of only telling you to install something.
+
+Try it without installing: https://han5810xy-dotcom.github.io/make-infographic/
+
+Release v1.0.1: https://github.com/han5810xy-dotcom/make-infographic/releases/tag/v1.0.1
 
 Then select a conversation in Qoder and say: **出图**.
 
 ## Three examples
 
 <p align="center">
-  <a href="examples/01-curiosity/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/01-curiosity.png?v=1" width="220" alt="Curiosity and spaced repetition" /></a>
-  <a href="examples/02-skip-signal/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/02-skip-signal.png?v=1" width="220" alt="Skipping is evidence" /></a>
-  <a href="examples/03-repeat-node/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/03-repeat-node.png?v=1" width="220" alt="Repeat nodes, not cards" /></a>
+  <a href="examples/01-curiosity/"><img src="docs/assets/01-curiosity.png?v=2" width="220" alt="Curiosity and spaced repetition" /></a>
+  <a href="examples/02-skip-signal/"><img src="docs/assets/02-skip-signal.png?v=2" width="220" alt="Skipping is evidence" /></a>
+  <a href="examples/03-repeat-node/"><img src="docs/assets/03-repeat-node.png?v=2" width="220" alt="Repeat nodes, not cards" /></a>
 </p>
 
 - [Curiosity and spaced repetition](examples/01-curiosity/): the forgetting curve is also a curiosity supply curve.

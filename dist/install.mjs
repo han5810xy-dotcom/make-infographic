@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { inflateRawSync } from "node:zlib";
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const ZIP_NAME = `make-infographic-${VERSION}.zip`;
 const scriptDirectory = (() => {
   try { return dirname(fileURLToPath(import.meta.url)); } catch { return process.cwd(); }
@@ -74,12 +74,31 @@ function checkNode() {
   }
 }
 
-function detectPnpm() {
+function detectInstaller() {
   const direct = run("pnpm", ["--version"]);
-  if (direct.status === 0 && direct.stdout.trim()) return { command: "pnpm", args: [] };
+  if (direct.status === 0 && direct.stdout.trim()) {
+    return { command: "pnpm", args: ["add", "puppeteer-core"], how: "pnpm" };
+  }
   const corepack = run("corepack", ["pnpm", "--version"]);
-  if (corepack.status === 0 && corepack.stdout.trim()) return { command: "corepack", args: ["pnpm"] };
-  throw new Error("这台电脑没有 pnpm，装好再来。");
+  if (corepack.status === 0 && corepack.stdout.trim()) {
+    return { command: "corepack", args: ["pnpm", "add", "puppeteer-core"], how: "corepack" };
+  }
+  for (const npm of ["npm", "npm.cmd"]) {
+    const probe = run(npm, ["--version"]);
+    if (probe.status === 0 && probe.stdout.trim()) {
+      return {
+        command: npm,
+        args: ["install", "--no-save", "--no-audit", "--no-fund", "puppeteer-core"],
+        how: "npm",
+      };
+    }
+  }
+  throw new Error(
+    "这台电脑找不到 pnpm / corepack / npm，没办法装截图依赖。三条路任选一条，然后重跑本脚本：\n" +
+      "  1) npm i -g pnpm      （Node 官方安装包自带 npm，最省事）\n" +
+      "  2) corepack enable    （Node 16.9 及以上自带 corepack）\n" +
+      "  3) 一条都不装：把 zip 手动解压到技能目录，出图时加 --html-only，再用浏览器把 HTML 打印成 PNG",
+  );
 }
 
 function browserCandidates() {
@@ -176,7 +195,7 @@ async function extractZip(zipPath, destination) {
 
 async function main() {
   checkNode();
-  const pnpm = detectPnpm();
+  const installer = detectInstaller();
   const browser = checkBrowser();
   const zipPath = await findZip();
   const targetRoot = await chooseTarget();
@@ -192,8 +211,8 @@ async function main() {
   await extractZip(zipPath, target);
   say(`技能文件已放进 ${target}`);
   say(`浏览器：${browser}`);
-  say("正在安装截图依赖…");
-  const install = run(pnpm.command, [...pnpm.args, "add", "puppeteer-core"], {
+  say(`装依赖用的：${installer.how}`);
+  const install = run(installer.command, installer.args, {
     cwd: target,
     stdio: "inherit",
   });
