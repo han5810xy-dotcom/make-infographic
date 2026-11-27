@@ -150,7 +150,8 @@
           "verbatim": true
         }
       ],
-      "strength": 0.95
+      "strength": 0.95,
+      "review_hash": "724f8da9fc912cc9505e3498e7ca9c4fd0fd43ad490020e510f6bd2fe6409af7"
     },
     {
       "id": "r2",
@@ -171,22 +172,8 @@
           "verbatim": true
         }
       ],
-      "strength": 0.9
-    },
-    {
-      "id": "r3",
-      "from": "p6",
-      "to": "p7",
-      "kind": "支持",
-      "evidence": [
-        {
-          "speaker": "assistant",
-          "turn_index": 1,
-          "text": "检验理解不能只问“懂了吗”，而要让对方**独立讲出机制、步骤或因果链**。能说出“它是干什么的”，不等于能回答“它为什么能这样工作”。",
-          "verbatim": true
-        }
-      ],
-      "strength": 0.9
+      "strength": 0.9,
+      "review_hash": "1087cef1cf1a4a6381a299d435ec51a12c3a965f193b4acfc6a593fd4830b558"
     },
     {
       "id": "r4",
@@ -207,7 +194,8 @@
           "verbatim": true
         }
       ],
-      "strength": 0.85
+      "strength": 0.85,
+      "review_hash": "ac57c2e17ecd730ed469b6f99d8bd1c9ed45eda9de1348080f5e3841acbe2153"
     },
     {
       "id": "r5",
@@ -240,7 +228,8 @@
           "verbatim": true
         }
       ],
-      "strength": 0.9
+      "strength": 0.9,
+      "review_hash": "df6169b45ae6a6646b3f19dc3e08cb56c2a2300f3ca1292d33972e8784037c89"
     }
   ],
   "gaps": [

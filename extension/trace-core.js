@@ -34,9 +34,8 @@
 
   function finalizeTurns(turns) {
     return turns
-      .map((turn, index) => makeTurn(turn.speaker, turn.text, index, turn.thinking))
-      .filter((turn) => turn.text || turn.thinking)
-      .map((turn, index) => ({ ...turn, index }));
+      .map((turn, index) => makeTurn(turn.speaker, turn.text, Number.isInteger(turn.index) && turn.index >= 0 ? turn.index : index, turn.thinking))
+      .filter((turn) => turn.text || turn.thinking);
   }
 
   function parseMarkdown(input, meta = {}) {
@@ -44,11 +43,36 @@
     const lines = source.split('\n');
     const turns = [];
     let current = null;
+    let fence = null;
+    let fencedTurn = null;
+    const push = () => { if (current) turns.push(current); current = null; };
     for (const line of lines) {
+      const openFence = line.match(/^\s*(`{3,}|~{3,})(.*)$/);
+      if (openFence) {
+        if (!fence) {
+          const encoded = openFence[2].match(/^\s*trace-turn\s+(\{.*\})\s*$/);
+          fence = { marker: openFence[1], kind: encoded ? 'turn' : 'other', encoded: encoded?.[1] || '' };
+          if (encoded) {
+            push();
+            const header = JSON.parse(encoded[1]);
+            current = makeTurn(header.speaker, '', header.index, header.thinking);
+            fencedTurn = current;
+          }
+        } else if (openFence[1][0] === fence.marker[0] && openFence[1].length >= fence.marker.length && !openFence[2].trim()) {
+          if (fence.kind === 'turn') { current.text = cleanText(current.text); push(); }
+          fence = null;
+          fencedTurn = null;
+        } else if (fencedTurn) fencedTurn.text += `\n${line}`;
+        continue;
+      }
+      if (fence) {
+        if (fencedTurn) fencedTurn.text += `\n${line}`;
+        continue;
+      }
       const marker = line.match(/^\s*(?:#{1,6}\s*)?(?:\*\*|__)?(用户|助手|系统|User|Assistant|System|USER|ASSISTANT|SYSTEM)(?:\s*[（(]\s*(?:第\s*)?\d+\s*[轮轮]?\s*[）)])?(?:\*\*|__)?\s*[:：]?\s*(.*)$/);
       const equals = line.match(/^\s*={2,}\s*(用户|助手|系统|User|Assistant|System|USER|ASSISTANT|SYSTEM)(?:\s+\d+)?\s*={2,}\s*(.*)$/);
       if (marker || equals) {
-        if (current) turns.push(current);
+        push();
         const match = marker || equals;
         current = makeTurn(roleOf(match[1]), match[2] || '', turns.length);
         continue;
@@ -56,7 +80,7 @@
       const thinking = line.match(/^\s*(?:思考|思考过程|Thinking|Reasoning)\s*[:：]\s*(.*)$/i);
       if (thinking) {
         if (!current || current.speaker !== 'assistant') {
-          if (current) turns.push(current);
+          push();
           current = makeTurn('assistant', '', turns.length);
         }
         current.thinking = [current.thinking, thinking[1]].filter(Boolean).join('\n');
@@ -65,7 +89,8 @@
       if (!current) current = makeTurn('user', '', 0);
       current.text = [current.text, line].filter(Boolean).join('\n');
     }
-    if (current) turns.push(current);
+    if (fence) throw new Error('Markdown 代码块没有闭合，无法安全还原对话。');
+    push();
     const normalized = finalizeTurns(turns.length ? turns : [makeTurn('user', source, 0)]);
     return {
       schema_version: 'trace.v1',
@@ -112,18 +137,17 @@
   function normalizeTrace(input, meta = {}) {
     if (input && typeof input === 'object') return parseJson(input, meta);
     const text = String(input ?? '');
-    if (/^\s*[\[{]/.test(text)) {
-      try { return parseJson(text, meta); } catch {}
-    }
+    if (/^\s*[\[{]/.test(text)) return parseJson(text, meta);
     return parseMarkdown(text, meta);
   }
 
   function traceToMarkdown(trace, { includeThinking = true } = {}) {
-    const labels = { user: '用户', assistant: '助手', system: '系统' };
     return trace.turns.map((turn) => {
-      const head = `${labels[turn.speaker] || '用户'}：`;
-      const thinking = includeThinking && turn.thinking ? `思考：${turn.thinking}\n` : '';
-      return `${head}\n${thinking}${turn.text}`;
+      const header = JSON.stringify({ index: turn.index, speaker: turn.speaker, thinking: includeThinking ? turn.thinking || '' : '' });
+      const text = turn.text || '';
+      const runs = text.match(/`{3,}/g) || [];
+      const marker = '`'.repeat(Math.max(3, ...runs.map((run) => run.length + 1)));
+      return `${marker}trace-turn ${header}\n${text}\n${marker}`;
     }).join('\n\n');
   }
 
@@ -142,16 +166,9 @@
   }
 
   function captureQwen(document, location, options = {}) {
-    const selectors = [
-      '[data-role="user"]',
-      '[data-role="assistant"]',
-      '[data-testid*="message"]',
-      '[class*="chat-message"]',
-      '[class*="message-item"]',
-      '[class*="message-bubble"]',
-      '[class*="bubble"]',
-    ].join(',');
-    const all = [...document.querySelectorAll(selectors)];
+    const explicit = [...document.querySelectorAll('[data-role="user"], [data-role="assistant"], [data-speaker="user"], [data-speaker="assistant"]')];
+    const fallback = explicit.length ? [] : [...document.querySelectorAll('[data-testid*="message"], [class*="chat-message"], [class*="message-item"], [class*="message-bubble"], [class*="bubble"]')];
+    const all = explicit.length ? explicit : fallback;
     const nodes = all.filter((node) => !all.some((other) => other !== node && other.contains(node)));
     const turns = [];
     for (const node of nodes) {
@@ -160,17 +177,19 @@
       const speaker = roleOf(`${roleAttr} ${classText}`);
       const clone = node.cloneNode(true);
       const thinkingNodes = [...clone.querySelectorAll('[class*="thinking"], [class*="reasoning"], [class*="thought"], [data-testid*="thinking"], details')];
-      const thinking = thinkingNodes.map((item) => item.textContent || '').join('\n').trim();
-      for (const item of thinkingNodes) item.remove();
-      for (const item of clone.querySelectorAll('button, script, style, svg, [aria-hidden="true"]')) item.remove();
-      const text = (clone.innerText || clone.textContent || '').trim();
+      const uniqueThinking = thinkingNodes.filter((item, index) => !thinkingNodes.slice(0, index).some((other) => other.contains(item)));
+      const thinking = uniqueThinking.map((item) => item.textContent || '').join('\n').trim();
+      for (const item of uniqueThinking) item.remove();
+      for (const item of clone.querySelectorAll('button, script, style, svg, [aria-hidden="true"], [hidden]')) item.remove();
+      for (const item of clone.querySelectorAll('br')) item.replaceWith('\n');
+      for (const item of clone.querySelectorAll('p, div, li, pre, h1, h2, h3, h4, h5, h6')) item.append('\n');
+      const text = cleanText(clone.textContent || '');
       if (text || thinking) turns.push(makeTurn(speaker, text, turns.length, thinking));
     }
     if (!turns.length) {
       const selection = String(document.getSelection?.() || '').trim();
-      const main = document.querySelector('main') || document.body;
-      const text = selection || (main?.innerText || main?.textContent || '').trim();
-      if (text) return parseMarkdown(text, { type: 'qwen-extension', url: location.href, title: document.title });
+      if (selection) return parseMarkdown(selection, { type: 'qwen-extension', url: location.href, title: document.title });
+      throw new Error('没有找到独立的用户／助手消息。请先选中对话文本，或更新页面采集规则。');
     }
     const normalized = finalizeTurns(turns);
     return {

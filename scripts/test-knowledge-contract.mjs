@@ -21,9 +21,9 @@ const index = evidenceIndexFromCollected(collected);
 const input = {
   topic: '分数与理解',
   propositions: [
-    { id: 'p1', kind: '主张', text: '我以为分数高就说明学习有效', evidence: [{ quote_id: q1, speaker: 'user', turn_index: 0, verbatim: true }], weight: 0.8, provenance: 'quote' },
-    { id: 'p2', kind: '因果', text: '分数只说明测试跑通', evidence: [{ quote_id: q2, speaker: 'assistant', turn_index: 1, verbatim: true }], weight: 0.9, provenance: 'quote' },
-    { id: 'p3', kind: '步骤', text: '用真实作答判断理解', evidence: [{ quote_id: q2, speaker: 'assistant', turn_index: 1, verbatim: true }], weight: 0.75, provenance: 'summary' },
+    { id: 'p1', kind: '主张', layer: 'main', text: '我以为分数高就说明学习有效', evidence: [{ quote_id: q1, speaker: 'user', turn_index: 0, verbatim: true }], weight: 0.8, provenance: 'quote' },
+    { id: 'p2', kind: '因果', layer: 'main', text: '分数只说明测试跑通', evidence: [{ quote_id: q2, speaker: 'assistant', turn_index: 1, verbatim: true }], weight: 0.9, provenance: 'quote' },
+    { id: 'p3', kind: '步骤', layer: 'main', text: '用真实作答判断理解', evidence: [{ quote_id: q2, speaker: 'assistant', turn_index: 1, verbatim: true }], weight: 0.75, provenance: 'summary' },
   ],
   relations: [
     { id: 'r1', from: 'p2', to: 'p3', kind: '支持', evidence: [{ quote_id: q2, verbatim: true }], strength: 0.9 },
@@ -51,5 +51,12 @@ assert.ok(validateStructure(finalizeStructure(nonVerbatimRelation), { evidenceIn
 const badBackbone = structuredClone(input);
 badBackbone.backbone = ['p1'];
 assert.ok(validateStructure(finalizeStructure(badBackbone), { evidenceIndex: index }).errors.some((error) => error.includes('3~5')));
+
+const mutatedHash = structuredClone(input);
+mutatedHash.propositions[1].text = '改变结论会改变结构身份';
+assert.notEqual(finalizeStructure(mutatedHash).id, finalized.id);
+const mutatedLayer = structuredClone(input);
+mutatedLayer.propositions[1].layer = 'example';
+assert.notEqual(finalizeStructure(mutatedLayer).id, finalized.id);
 
 console.log('knowledge contract OK');

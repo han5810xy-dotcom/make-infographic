@@ -30,10 +30,13 @@ export function resolveAuthoring(authored, source) {
     headline: authored.headline || '',
     subhead: authored.subhead || '',
     weight_source: authored.weight_source || 'auto',
+    backbone_source: authored.backbone_source || (authored.backbone?.length ? 'authored' : 'auto'),
+    authoring_mode: authored.authoring_mode || 'authored',
     overview: authored.overview === true,
     propositions: (authored.propositions || []).map((proposition) => ({
       id: proposition.id,
       kind: proposition.kind,
+      layer: proposition.layer || (proposition.kind === '例子' || (proposition.evidence || []).some((item) => /^(?:例如|比如|举例)/.test(item.text || '')) ? 'example' : 'main'),
       text: proposition.text,
       evidence: (proposition.evidence || []).map((item) => resolveIntoIndex(item)),
       weight: Number.isFinite(proposition.weight) ? proposition.weight : 0.5,
@@ -49,11 +52,12 @@ export function resolveAuthoring(authored, source) {
         return { quote_id: resolved.quote_id, verbatim: true };
       }),
       strength: Number.isFinite(relation.strength) ? relation.strength : 0.5,
-      reviewed: relation.reviewed === true,
+      review_hash: relation.review_hash || '',
     })),
     topo: authored.topo || 'network',
     backbone: authored.backbone || [],
     gaps: authored.gaps || [],
+    key_conclusions: authored.key_conclusions || [],
     views: authored.views,
   };
   return { structure: finalizeStructure(structure), collected, evidenceIndex };

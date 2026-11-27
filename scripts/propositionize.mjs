@@ -130,6 +130,7 @@ export function buildPropositions(collected, { topic = '' } = {}) {
       evidence: [{ quote_id: candidate.quote_id, speaker: candidate.speaker, turn_index: candidate.turn_index, verbatim: true }],
       weight: 0.5,
       provenance: candidate.provenance,
+      layer: candidate.kind === '例子' || /^(?:例如|比如|举例)/.test(candidate.text) ? 'example' : 'main',
     });
   }
   for (const utterance of collected.utterances || []) {
@@ -143,6 +144,7 @@ export function buildPropositions(collected, { topic = '' } = {}) {
   const structure = {
     id: '',
     topic: resolvedTopic,
+    authoring_mode: 'auto-candidate',
     propositions,
     relations: [],
     topo: propositions.length > 12 ? 'network' : 'chain',

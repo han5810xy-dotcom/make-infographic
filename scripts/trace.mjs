@@ -82,7 +82,7 @@ async function main(argv) {
     const trace = await readTrace(argv[1]);
     const outDir = resolve(arg(argv, 'out-dir'));
     if (!arg(argv, 'out-dir')) throw new Error(usage);
-    const skill = resolve(arg(argv, 'skill', 'C:/Users/13258/.qoder-cn/skills/make-infographic'));
+    const skill = resolve(arg(argv, 'skill', join(dirname(fileURLToPath(import.meta.url)), '..')));
     const make = join(skill, 'scripts/make.mjs');
     const tracePath = join(outDir, 'traces', `${trace.id}.md`);
     await writeText(tracePath, `${TraceCore.traceToMarkdown(trace)}\n`);

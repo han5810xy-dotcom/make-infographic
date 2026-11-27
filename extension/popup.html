@@ -14,6 +14,8 @@
 <button class="primary" id="capture" type="button">捕获当前会话</button>
 <button id="download" type="button" disabled>下载 Trace JSON</button>
 <button id="copy" type="button" disabled>复制 Trace JSON</button>
+<label for="token">本机桥接令牌（首次使用粘贴 .bridge-token 内容）</label>
+<input id="token" type="password" autocomplete="off" style="width:100%;margin:0 0 8px;padding:8px;border:1px solid #dce2ee;border-radius:8px">
 <button id="bridge" type="button" disabled>发送到本机并出图</button>
 <div class="status" id="status" role="status" aria-live="polite">尚未捕获。</div>
 <script src="popup.js"></script>

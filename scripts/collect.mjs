@@ -1,5 +1,7 @@
 import { sourceHash, stableQuoteId, visibleLen } from './contract.mjs';
 
+const SPEAKERS = ['user', 'assistant', 'system'];
+
 const SPEAKER_ALIASES = new Map([
   ['用户', 'user'], ['我', 'user'], ['问', 'user'], ['提问', 'user'], ['Q', 'user'],
   ['助手', 'assistant'], ['AI', 'assistant'], ['Qoder', 'assistant'], ['答', 'assistant'], ['回答', 'assistant'], ['A', 'assistant'],
@@ -61,11 +63,13 @@ function parseUtterances(source) {
   const utterances = [];
   let current = null;
   let sawMarker = false;
+  let fence = null;
+  let fencedTurn = null;
 
   const flush = () => {
     if (!current) return;
     const text = current.lines.join('\n').trim();
-    if (text) utterances.push({ speaker: current.speaker, turn_index: utterances.length, text });
+    if (text) utterances.push({ speaker: current.speaker, turn_index: Number.isInteger(current.turn_index) && current.turn_index >= 0 ? current.turn_index : utterances.length, text });
     current = null;
   };
   const start = (speaker, remainder = '') => {
@@ -75,6 +79,33 @@ function parseUtterances(source) {
   };
 
   for (const line of lines) {
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (fenceMatch) {
+      if (!fence) {
+        const encoded = fenceMatch[2].match(/^\s*trace-turn\s+(\{.*\})\s*$/);
+        let header = null;
+        if (encoded) {
+          try { header = JSON.parse(encoded[1]); } catch { throw new Error('Trace 轮次标记损坏，无法安全读取。'); }
+        }
+        fence = { marker: fenceMatch[1], turn: !!header };
+        if (header) {
+          flush();
+          sawMarker = true;
+          fencedTurn = { speaker: SPEAKERS.includes(header.speaker) ? header.speaker : 'assistant', turn_index: header.index, lines: [] };
+          current = fencedTurn;
+        }
+      } else if (fenceMatch[1][0] === fence.marker[0] && fenceMatch[1].length >= fence.marker.length && !fenceMatch[2].trim()) {
+        if (fence.turn) { current = fencedTurn; flush(); fencedTurn = null; }
+        fence = null;
+      } else if (fencedTurn) fencedTurn.lines.push(line);
+      else if (current) current.lines.push(line);
+      continue;
+    }
+    if (fence) {
+      if (fencedTurn) fencedTurn.lines.push(line);
+      else if (current) current.lines.push(line);
+      continue;
+    }
     if (!current && /^\s*#\s*(?:Title:|Source JSONL:|Source user lines:|Extraction:|m1-private-)/i.test(line)) continue;
     const block = line.match(/^\s*={2,}\s*(USER|ASSISTANT)(?:\s+\d+)?\s*={2,}\s*$/i);
     if (block) {

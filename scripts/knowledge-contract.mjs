@@ -6,6 +6,7 @@ export const RELATION_KINDS = Object.freeze(['因果', '递进', '对比', '条�
 export const TOPOLOGIES = Object.freeze(['chain', 'tree', 'matrix', 'network', 'cycle', 'forest']);
 export const GRAPHICS = Object.freeze(['flow', 'tree', 'matrix', 'network', 'timeline', 'pyramid', 'turn-band']);
 export const PROVENANCE = Object.freeze(['quote', 'summary', 'inferred']);
+export const LAYERS = Object.freeze(['main', 'branch', 'example', 'background']);
 export const VIEW_TARGETS = Object.freeze(['backbone', 'branch']);
 
 const compact = (value) => String(value ?? '').toLowerCase().replace(/[\s，。！？；：、,.!?;:"“”‘’'()（）《》〈〉「」『』\[\]—…]/g, '');
@@ -13,21 +14,43 @@ export const visibleLen = (value) => [...String(value ?? '').replace(/\s/g, '')]
 export const sha256 = (value) => createHash('sha256').update(String(value ?? ''), 'utf8').digest('hex');
 
 export function stablePropositionId(proposition, index = 0) {
-  const material = [proposition.kind, proposition.text, ...(proposition.evidence || []).map((item) => item.quote_id)].join('\u0000');
+  const material = [proposition.kind, proposition.layer, proposition.provenance, proposition.text, ...(proposition.evidence || []).map((item) => item.quote_id)].join('\u0000');
   return `p${index + 1}_${sha256(material).slice(0, 8)}`;
 }
 
 export function stableRelationId(relation, index = 0) {
-  const material = [relation.from, relation.to, relation.kind, ...(relation.evidence || []).map((item) => item.quote_id)].join('\u0000');
+  const material = [relation.from, relation.to, relation.kind, relation.strength, ...(relation.evidence || []).map((item) => item.quote_id)].join('\u0000');
   return `r${index + 1}_${sha256(material).slice(0, 8)}`;
 }
 
 export function structureId(structure) {
-  const material = [
-    structure.topic,
-    ...(structure.propositions || []).map((item) => `${item.id}:${item.text}`),
-    ...(structure.relations || []).map((item) => `${item.id}:${item.from}->${item.to}:${item.kind}`),
-  ].join('\u0001');
+  const material = JSON.stringify({
+    topic: structure.topic,
+    headline: structure.headline || '',
+    subhead: structure.subhead || '',
+    authoring_mode: structure.authoring_mode || '',
+    propositions: (structure.propositions || []).map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      layer: item.layer || 'main',
+      text: item.text,
+      evidence: (item.evidence || []).map((evidence) => [evidence.quote_id, evidence.speaker, evidence.turn_index, evidence.verbatim]),
+      weight: item.weight,
+      provenance: item.provenance,
+    })),
+    relations: (structure.relations || []).map((item) => ({
+      id: item.id,
+      from: item.from,
+      to: item.to,
+      kind: item.kind,
+      evidence: (item.evidence || []).map((evidence) => [evidence.quote_id, evidence.verbatim]),
+      strength: item.strength,
+    })),
+    topo: structure.topo,
+    backbone: structure.backbone || [],
+    gaps: structure.gaps || [],
+    views: structure.views || [],
+  });
   return `s_${sha256(material).slice(0, 16)}`;
 }
 
@@ -83,6 +106,7 @@ export function validateProposition(proposition, index) {
   }
   if (!Number.isFinite(proposition.weight) || proposition.weight < 0 || proposition.weight > 1) errors.push(`${proposition.id}：weight 必须在 0~1`);
   if (!PROVENANCE.includes(proposition.provenance)) errors.push(`${proposition.id}：provenance 只能是 quote、summary 或 inferred`);
+  if (!LAYERS.includes(proposition.layer)) errors.push(`${proposition.id}：layer 必须是 main、branch、example 或 background`);
   if (proposition.provenance === 'quote') {
     const exact = (proposition.evidence || []).some((item) => item.verbatim === true && index?.get(item.quote_id)?.text?.includes(proposition.text));
     if (!exact) errors.push(`${proposition.id}：标为 quote，但命题文字不是 evidence 原句的逐字片段`);
@@ -127,15 +151,24 @@ export function validateView(view, structure) {
   if (!view || typeof view !== 'object') return ['视图不是对象'];
   if (!view.id || typeof view.id !== 'string') errors.push('视图缺少 id');
   if (!view.props || typeof view.props !== 'object' || Array.isArray(view.props)) errors.push(`${view.id}：props 必须是对象`);
+  const propositionIds = view.props?.propositionIds || [];
+  if (!propositionIds.length) errors.push(`${view.id}：没有命题`);
+  for (const id of propositionIds) {
+    if (!structure.propositions.some((item) => item.id === id)) errors.push(`${view.id}：引用不存在的命题 ${id}`);
+  }
   if (view.target === 'backbone') {
-    if (!Array.isArray(view.props?.propositionIds) || !view.props.propositionIds.length) errors.push(`${view.id}：主图没有命题`);
-    for (const id of view.props?.propositionIds || []) {
-      if (!structure.propositions.some((item) => item.id === id)) errors.push(`${view.id}：主图引用不存在的命题 ${id}`);
-    }
+    if (propositionIds.length > 7) errors.push(`${view.id}：主图超过 7 个节点`);
   } else if (typeof view.target === 'string' && view.target.startsWith('branch:')) {
     const root = view.target.slice(7);
     if (!structure.propositions.some((item) => item.id === root)) errors.push(`${view.id}：分支根 ${root} 不存在`);
+    if (propositionIds.length > 12) errors.push(`${view.id}：细节图超过 12 个节点`);
   } else errors.push(`${view.id}：target 必须是 backbone 或 branch:pX`);
+  const relationIds = new Set((structure.relations || []).map((item) => item.id));
+  for (const id of view.props?.relationIds || []) {
+    const relation = structure.relations.find((item) => item.id === id);
+    if (!relationIds.has(id)) errors.push(`${view.id}：引用不存在的关系 ${id}`);
+    else if (!propositionIds.includes(relation.from) || !propositionIds.includes(relation.to)) errors.push(`${view.id}：关系 ${id} 的端点不在图中`);
+  }
   if (!GRAPHICS.includes(view.graphic)) errors.push(`${view.id}：graphic 不在允许列表内`);
   return errors;
 }
@@ -223,21 +256,21 @@ export function finalizeStructure(input) {
     idMap.set(proposition.id, id);
     return { ...proposition, id };
   });
+  const relationIdMap = new Map();
   structure.relations = (structure.relations || []).map((relation, index) => {
     const from = idMap.get(relation.from) || relation.from;
     const to = idMap.get(relation.to) || relation.to;
-    return {
-      ...relation,
-      id: stableRelationId({ ...relation, from, to }, index),
-      from,
-      to,
-    };
+    const id = stableRelationId({ ...relation, from, to }, index);
+    relationIdMap.set(relation.id, id);
+    return { ...relation, id, from, to };
   });
   structure.backbone = (structure.backbone || []).map((id) => idMap.get(id) || id);
   if (Array.isArray(structure.views)) {
     for (const view of structure.views) {
-      if (view.target === 'backbone' && Array.isArray(view.props?.propositionIds)) {
-        view.props.propositionIds = view.props.propositionIds.map((id) => idMap.get(id) || id);
+      if (Array.isArray(view.props?.propositionIds)) view.props.propositionIds = view.props.propositionIds.map((id) => idMap.get(id) || id);
+      if (Array.isArray(view.props?.relationIds)) view.props.relationIds = view.props.relationIds.map((id) => relationIdMap.get(id) || id);
+      if (view.props?.evidence && typeof view.props.evidence === 'object') {
+        view.props.evidence = Object.fromEntries(Object.entries(view.props.evidence).map(([id, value]) => [idMap.get(id) || id, value]));
       }
       if (typeof view.target === 'string' && view.target.startsWith('branch:')) {
         view.target = `branch:${idMap.get(view.target.slice(7)) || view.target.slice(7)}`;

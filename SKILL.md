@@ -43,7 +43,7 @@ Structure = {
 }
 View = {
   id, target: 'backbone'|'branch:p3',
-  graphic: 'flow'|'tree'|'matrix'|'network'|'timeline'|'pyramid'|'turn-band',
+  graphic: 'flow'|'tree'|'matrix'|'network'|'turn-band',
   props
 }
 ```
@@ -77,7 +77,15 @@ node "$SKILL/scripts/make.mjs" --spec 作者结构.json --in .source.md --out �
 node "$SKILL/scripts/make.mjs" --demo
 ```
 
-默认输出 PNG、SVG、HTML、Structure JSON、证据索引与归档原文。`--html-only` 只出 HTML，明确标注未做浏览器截图。
+默认输出 PNG、SVG、HTML、Structure JSON、证据索引与归档原文，整套产物落在工作目录的 `infographics/`。`--html-only` 只出 HTML，明确标注未做浏览器截图。没有 `--spec` 时明确按自动候选处理，不冒充人工作者稿。
+
+扩展与网页导入可发送到本机桥接：
+
+```bash
+node "$SKILL/bridge/server.mjs" --workspace 本机工作目录
+```
+
+把工作目录 `.bridge-token` 的内容粘贴到扩展或导入页。令牌只用于本机，不要分享。桥接逐次隔离输出，失败不会返回其他会话的图片。当前机器的 Chrome／Edge 禁止命令行加载未打包扩展，因此真实扩展运行仍未实测；模拟页面规则、导入、Skill 与桥接已分别验收。
 
 旧版 turn card：
 

@@ -93,7 +93,7 @@ export function computeWeights(structure, collected, evidenceIndex) {
   };
 }
 
-function connectedComponent(ids, relations) {
+function componentsOf(ids, relations) {
   const allowed = new Set(ids);
   const adjacency = new Map(ids.map((id) => [id, new Set()]));
   for (const relation of relations || []) {
@@ -102,19 +102,27 @@ function connectedComponent(ids, relations) {
       adjacency.get(relation.to).add(relation.from);
     }
   }
-  let best = [];
+  const seen = new Set();
+  const output = [];
   for (const id of ids) {
-    const seen = new Set([id]);
+    if (seen.has(id)) continue;
+    const group = [];
     const queue = [id];
+    seen.add(id);
     while (queue.length) {
       const current = queue.shift();
+      group.push(current);
       for (const next of adjacency.get(current) || []) {
         if (!seen.has(next)) { seen.add(next); queue.push(next); }
       }
     }
-    if (seen.size > best.length) best = [...seen];
+    output.push(group);
   }
-  return best;
+  return output;
+}
+
+function connectedComponent(ids, relations) {
+  return componentsOf(ids, relations).sort((a, b) => b.length - a.length)[0] || [];
 }
 
 function orderBackbone(ids, relations) {
@@ -140,26 +148,68 @@ function orderBackbone(ids, relations) {
   return ids;
 }
 
-export function selectBackbone(structure) {
-  const candidates = structure.propositions
-    .filter((proposition) => proposition.weight >= 0.7)
-    .sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id))
-    .map((proposition) => proposition.id);
-  if (candidates.length < 3) return { backbone: [], reason: '权重达到 0.7 的命题不足 3 条' };
-  const component = connectedComponent(candidates, structure.relations);
-  if (component.length < 3) return { backbone: [], reason: '高权重命题之间没有连成 3 条以上的明确关系' };
-  const ordered = orderBackbone(candidates.filter((id) => component.includes(id)).slice(0, 5), structure.relations);
-  const indegree = new Map(ordered.map((id) => [id, 0]));
-  const outdegree = new Map(ordered.map((id) => [id, 0]));
+function fullGraphSinks(structure) {
+  const outdegree = new Map(structure.propositions.map((item) => [item.id, 0]));
   for (const relation of structure.relations || []) {
-    if (indegree.has(relation.from) && indegree.has(relation.to)) {
-      outdegree.set(relation.from, outdegree.get(relation.from) + 1);
-      indegree.set(relation.to, indegree.get(relation.to) + 1);
+    if (outdegree.has(relation.from) && relation.kind !== '对比') outdegree.set(relation.from, outdegree.get(relation.from) + 1);
+  }
+  return new Set([...outdegree.entries()].filter(([, degree]) => degree === 0).map(([id]) => id));
+}
+
+function validAuthoredBackbone(structure) {
+  const ids = structure.backbone || [];
+  if (ids.length < 3 || ids.length > 5) return false;
+  const byId = new Map(structure.propositions.map((item) => [item.id, item]));
+  if (ids.some((id) => !byId.has(id) || ['example', 'background'].includes(byId.get(id).layer))) return false;
+  const selected = new Set(ids);
+  const adjacency = new Map(structure.propositions.map((item) => [item.id, []]));
+  for (const relation of structure.relations || []) {
+    if (!adjacency.has(relation.from) || !adjacency.has(relation.to)) continue;
+    adjacency.get(relation.from).push(relation.to);
+    adjacency.get(relation.to).push(relation.from);
+  }
+  const reached = new Set([ids[0]]);
+  const visited = new Set([ids[0]]);
+  const queue = [ids[0]];
+  while (queue.length) {
+    for (const next of adjacency.get(queue.shift()) || []) {
+      if (visited.has(next)) continue;
+      visited.add(next);
+      if (selected.has(next)) reached.add(next);
+      queue.push(next);
     }
   }
-  const hasResult = ordered.some((id) => outdegree.get(id) === 0);
-  if (!hasResult) return { backbone: [], reason: '高权重子图没有终局结论，只有循环或并列' };
-  return { backbone: ordered, reason: '' };
+  if (reached.size !== ids.length) return false;
+  const sinks = fullGraphSinks(structure);
+  return ids.some((id) => sinks.has(id));
+}
+
+export function selectBackbone(structure) {
+  if (structure.backbone_source === 'authored' && validAuthoredBackbone(structure)) {
+    return { backbone: [...structure.backbone], reason: '', source: 'authored' };
+  }
+  const candidates = structure.propositions
+    .filter((proposition) => proposition.weight >= 0.7 && !['example', 'background'].includes(proposition.layer))
+    .sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id))
+    .map((proposition) => proposition.id);
+  if (candidates.length < 3) return { backbone: [], reason: '权重达到 0.7 的非例命题不足 3 条', source: 'auto' };
+  const sinks = fullGraphSinks(structure);
+  const components = componentsOf(candidates, structure.relations).filter((group) => group.length >= 3);
+  const withSink = components.filter((group) => group.some((id) => sinks.has(id))).sort((a, b) => b.length - a.length);
+  const component = withSink[0] || [];
+  if (!component.length) return { backbone: [], reason: '高权重命题没有形成含终局结论的连通骨架', source: 'auto' };
+  const ranked = component.slice().sort((a, b) => {
+    const aWeight = structure.propositions.find((item) => item.id === a)?.weight || 0;
+    const bWeight = structure.propositions.find((item) => item.id === b)?.weight || 0;
+    return bWeight - aWeight || a.localeCompare(b);
+  });
+  const selected = ranked.slice(0, 5);
+  if (!selected.some((id) => sinks.has(id))) {
+    const sink = ranked.find((id) => sinks.has(id));
+    if (sink) selected[selected.length - 1] = sink;
+  }
+  const ordered = orderBackbone([...new Set(selected)], structure.relations);
+  return { backbone: ordered, reason: '', source: 'auto' };
 }
 
 export function inferTopology(structure) {
@@ -209,6 +259,7 @@ export function buildFramework(structure, collected, evidenceIndex) {
   next.attention = computed;
   const backbone = selectBackbone(next);
   next.backbone = backbone.backbone;
+  next.backbone_source = backbone.source;
   const backboneIds = new Set(next.backbone);
   const backboneStructure = {
     ...next,

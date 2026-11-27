@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="A plain summary beside an evidence-grounded knowledge atlas" />
 
-Download [install.mjs](dist/install.mjs) and [make-infographic-2.0.0.zip](dist/make-infographic-2.0.0.zip) into the same folder, then run:
+Download [install.mjs](dist/install.mjs) and [make-infographic-2.0.1.zip](dist/make-infographic-2.0.1.zip) into the same folder, then run:
 
 ```powershell
 node install.mjs

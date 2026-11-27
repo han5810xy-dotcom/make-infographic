@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { launchBrowser, closeBrowser } from './browser.mjs';
 import { buildStructureHtml, buildStructureSvg } from './render-structure.mjs';
 import { VISUAL_SYNTAX } from './visual-syntax.mjs';
+import { runKnowledgeWorkflow } from './workflow.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const outDir = join(root, 'make-infographic/eval/m3/visual');
@@ -23,6 +24,12 @@ const cases = [
   base('cycle', [prop('p1', '观察'), prop('p2', '假设'), prop('p3', '检验'), prop('p4', '修正')], [rel('r1', 'p1', 'p2', '递进'), rel('r2', 'p2', 'p3', '递进'), rel('r3', 'p3', 'p4', '转折'), rel('r4', 'p4', 'p1', '递进')]),
   base('forest', [prop('p1', '主题一'), prop('p2', '主题一细节'), prop('p3', '主题二'), prop('p4', '主题二细节')], [rel('r1', 'p2', 'p1', '包含'), rel('r2', 'p4', 'p3', '包含')], []),
 ];
+const longText = '这是一条刻意保留完整内容的长命题，用来验证动态换行、节点高度、依据区和结论区都不会把文字截断，也不允许用省略号冒充完整表达。'.repeat(3);
+const longCase = base('tree', [prop('p1', longText, '定义'), prop('p2', longText), prop('p3', longText)], [rel('r1', 'p2', 'p1', '包含'), rel('r2', 'p3', 'p1', '包含')]);
+longCase.headline = '长标题与长正文必须完整显示，而不是缩字或截断 '.repeat(4);
+longCase.gaps = [{ missing: '一条关系缺少明确原句，未画入图中', why: longText }];
+longCase.views = [{ id: 'v1', target: 'backbone', graphic: 'tree', props: { propositionIds: ['p1', 'p2', 'p3'], relationIds: ['r1', 'r2'], evidence: {}, title: longCase.headline } }];
+cases.push(longCase);
 const graphic = { chain: 'flow', tree: 'tree', matrix: 'matrix', network: 'network', cycle: 'network', forest: 'tree' };
 for (const structure of cases) {
   structure.views = [{ id: 'v1', target: 'backbone', graphic: graphic[structure.topo], props: { propositionIds: structure.propositions.map((item) => item.id), relationIds: structure.relations.map((item) => item.id), evidence: {}, title: `${structure.topo} 图种测试` } }];
@@ -57,10 +64,29 @@ try {
           nodes: svg.querySelectorAll('[data-node-id]').length,
           edges: svg.querySelectorAll('[data-edge-id]').length,
           text: svg.textContent,
+          textOverflow: [...svg.querySelectorAll('[data-node-id]')].filter((text) => {
+            const shape = text.previousElementSibling;
+            if (!shape) return false;
+            const box = text.getBBox();
+            const shapeBox = shape.getBBox();
+            return box.x < shapeBox.x - 1 || box.x + box.width > shapeBox.x + shapeBox.width + 1 || box.y < shapeBox.y - 1 || box.y + box.height > shapeBox.y + shapeBox.height + 1;
+          }).map((text) => text.getAttribute('data-node-id')),
+          arrowVisibility: [...svg.querySelectorAll('[data-edge-id][marker-end]')].every((edge) => {
+            const end = edge.getPointAtLength(edge.getTotalLength());
+            return ![...svg.querySelectorAll('[data-node-id]')].some((text) => {
+              const shape = text.previousElementSibling;
+              if (!shape) return false;
+              const box = shape.getBBox();
+              return end.x > box.x + 2 && end.x < box.x + box.width - 2 && end.y > box.y + 2 && end.y < box.y + box.height - 2;
+            });
+          }),
         };
       });
       assert.ok(observed.scrollW <= observed.viewport + 1, `${structure.topo}/${width} 横向溢出`);
       assert.equal(observed.nodes, structure.propositions.length);
+      assert.equal(observed.edges, structure.relations.length, `${structure.topo}/${width} 丢边`);
+      assert.deepEqual(observed.textOverflow, [], `${structure.topo}/${width} 文字出框`);
+      assert.equal(observed.arrowVisibility, true, `${structure.topo}/${width} 箭头被节点遮住`);
       await page.screenshot({ path: join(caseDir, `${width}.png`), fullPage: true });
       widthResults.push({ width, ...observed });
     }
@@ -70,7 +96,10 @@ try {
   await closeBrowser(browser);
 }
 
-const flagship = JSON.parse(await readFile(join(root, 'make-infographic/eval/flagship/structure.json'), 'utf8'));
+const flagshipSource = await readFile(join(root, 'make-infographic/assets/demo-knowledge-source.md'), 'utf8');
+const flagshipAuthored = JSON.parse(await readFile(join(root, 'make-infographic/examples/knowledge-ioed-authored.json'), 'utf8'));
+const flagshipWorkflow = await runKnowledgeWorkflow(flagshipSource, { authored: flagshipAuthored });
+const flagship = flagshipWorkflow.structure;
 const nodeText = (svg) => {
   const map = new Map();
   for (const match of svg.matchAll(/<text data-node-id="([^"]+)"[^>]*>([\s\S]*?)<\/text>/g)) {

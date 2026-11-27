@@ -1,6 +1,6 @@
 import { cleanDisplay } from './collect.mjs';
 import { stableQuoteId, visibleLen } from './contract.mjs';
-import { RELATION_KINDS } from './knowledge-contract.mjs';
+import { RELATION_KINDS, sha256 } from './knowledge-contract.mjs';
 
 const compact = (value) => String(value ?? '').toLowerCase().replace(/[\s，。！？；：、,.!?;:"“”‘’'()（）《》〈〉「」『』\[\]—…]/g, '');
 
@@ -142,7 +142,7 @@ export function extractRelations(structure, collected, evidenceIndex) {
         to = leftPosition < rightPosition ? right.proposition : left.proposition;
       }
     }
-    if ((kind === '因果' || kind === '条件') && [from.kind, to.kind].includes('例子')) {
+    if ((kind === '因果' || kind === '条件') && [from.layer, to.layer].includes('example')) {
       gaps.push({ missing: '例子与主结论被连成因果或条件', why: `原句「${sentence.text}」两端层级不同，未建边。` });
       continue;
     }
@@ -174,6 +174,24 @@ function directionalCue(kind, text) {
   return false;
 }
 
+export function relationReviewHash(relation, evidenceIndex, structure = null) {
+  const endpoint = (id) => {
+    const proposition = structure?.propositions?.find((item) => item.id === id);
+    return proposition ? { text: proposition.text, evidence: (proposition.evidence || []).map((item) => item.quote_id) } : id;
+  };
+  return sha256(JSON.stringify({
+    from: endpoint(relation.from),
+    to: endpoint(relation.to),
+    kind: relation.kind,
+    strength: relation.strength,
+    evidence: (relation.evidence || []).map((item) => [item.quote_id, evidenceIndex?.get(item.quote_id)?.text || '']),
+  }));
+}
+
+function hasValidReview(relation, evidenceIndex, structure) {
+  return !!relation.review_hash && relation.review_hash === relationReviewHash(relation, evidenceIndex, structure);
+}
+
 export function relationSemanticErrors(relation, structure, evidenceIndex) {
   const errors = [];
   if (!RELATION_KINDS.includes(relation.kind)) return [`${relation.id}：关系种类不合法`];
@@ -182,8 +200,28 @@ export function relationSemanticErrors(relation, structure, evidenceIndex) {
   if (!from || !to) return [...errors, `${relation.id}：两端命题不存在`];
   const texts = (relation.evidence || []).map((item) => evidenceIndex?.get(item.quote_id)?.text || '').filter(Boolean);
   if (!texts.length) return [...errors, `${relation.id}：没有可核对的关系原句`];
-  if (!relation.reviewed && !texts.some((text) => directionalCue(relation.kind, text))) errors.push(`${relation.id}：原句没有讲述「${relation.kind}」的明确方向线索`);
-  if ((relation.kind === '因果' || relation.kind === '条件') && [from.kind, to.kind].includes('例子')) errors.push(`${relation.id}：例子不能与主结论连成因果或条件`);
+  const reviewed = hasValidReview(relation, evidenceIndex, structure);
+  if (!reviewed) {
+    if (!texts.some((text) => directionalCue(relation.kind, text))) errors.push(`${relation.id}：原句没有讲述「${relation.kind}」的明确方向线索`);
+    for (const [label, proposition] of [['起点', from], ['终点', to]]) {
+      const covered = texts.some((text) => overlapScore(text, proposition, evidenceIndex) >= 0.18);
+      if (!covered) errors.push(`${relation.id}：关系原句没有覆盖${label}命题`);
+    }
+    const directionChecked = texts.some((text) => {
+      const directions = splitDirections(text, relation.kind);
+      if (!directions) return false;
+      const sentence = { text };
+      const fromPosition = evidencePosition(from, sentence, evidenceIndex);
+      const toPosition = evidencePosition(to, sentence, evidenceIndex);
+      if (fromPosition < 0 || toPosition < 0) return false;
+      const expectedFrom = relation.kind === '包含'
+        ? (fromPosition > toPosition ? from : to)
+        : (fromPosition < toPosition ? from : to);
+      return expectedFrom.id === relation.from;
+    });
+    if (!directionChecked) errors.push(`${relation.id}：箭头方向无法从原句确认`);
+  }
+  if ((relation.kind === '因果' || relation.kind === '条件') && [from.layer, to.layer].includes('example')) errors.push(`${relation.id}：例子不能与主结论连成因果或条件`);
   if (relation.strength < 0.5) errors.push(`${relation.id}：弱关系不能进入正式结构，请移入 gaps 或细节图`);
   return errors;
 }

@@ -63,25 +63,39 @@ function nearestBackbone(structure, start) {
 
 export function buildViews(structure, evidenceIndex = new Map()) {
   const views = [];
-  const backbone = structure.backbone?.length ? structure.backbone : structure.propositions.map((item) => item.id);
-  const mainChunks = [];
-  for (let index = 0; index < backbone.length; index += 7) mainChunks.push(backbone.slice(index, index + 7));
-  for (const propositionIds of mainChunks) {
-    const relationIds = (structure.relations || []).filter((relation) => propositionIds.includes(relation.from) && propositionIds.includes(relation.to)).map((relation) => relation.id);
+  const propositionIdsAll = structure.propositions.map((item) => item.id);
+  const relationById = new Map((structure.relations || []).map((item) => [item.id, item]));
+  const evidenceFor = (ids) => Object.fromEntries(ids.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => ({
+    text: evidenceIndex.get(item.quote_id)?.text || '',
+    speaker: item.speaker,
+    turn_index: item.turn_index,
+    quote_id: item.quote_id,
+  })).filter((item) => item.text)]));
+  const addView = ({ target, graphic, propositionIds, title, layout = '' }) => {
+    const unique = [...new Set(propositionIds)];
+    if (!unique.length) return;
+    const relationIds = (structure.relations || []).filter((relation) => unique.includes(relation.from) && unique.includes(relation.to)).map((relation) => relation.id);
     views.push({
       id: `v${views.length + 1}`,
-      target: 'backbone',
-      graphic: graphicForTopology(structure.topo),
-      props: { propositionIds, relationIds, evidence: Object.fromEntries(propositionIds.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => evidenceIndex.get(item.quote_id)?.text || '').filter(Boolean)])), headline: structure.headline || '', subhead: structure.subhead || '', title: structure.topo === 'forest' ? `${structure.topic}·并列结构` : `${structure.topic}·主图` },
+      target,
+      graphic,
+      props: { propositionIds: unique, relationIds, evidence: evidenceFor(unique), headline: structure.headline || '', subhead: structure.subhead || '', ...(layout ? { layout } : {}), title },
     });
-  }
-  if (structure.topo === 'forest') {
+  };
+  const chunk = (ids, size) => {
+    const output = [];
+    for (let index = 0; index < ids.length; index += size) output.push(ids.slice(index, index + size));
+    return output;
+  };
+
+  if (!structure.backbone?.length) {
     for (const group of components(structure)) {
-      if (group.length <= 1 || views.some((view) => group.every((id) => view.props.propositionIds.includes(id)))) continue;
-      const relationIds = (structure.relations || []).filter((relation) => group.includes(relation.from) && group.includes(relation.to)).map((relation) => relation.id);
-      views.push({ id: `v${views.length + 1}`, target: 'backbone', graphic: 'tree', props: { propositionIds: group, relationIds, evidence: Object.fromEntries(group.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => evidenceIndex.get(item.quote_id)?.text || '').filter(Boolean)])), headline: structure.headline || '', subhead: structure.subhead || '', title: `${structure.topic}·分支` } });
+      for (const propositionIds of chunk(group, 7)) addView({ target: 'backbone', graphic: 'tree', propositionIds, title: `${structure.topic}·并列结构` });
     }
+  } else {
+    for (const propositionIds of chunk(structure.backbone, 7)) addView({ target: 'backbone', graphic: graphicForTopology(structure.topo), propositionIds, title: `${structure.topic}·主图` });
   }
+
   const branches = new Map();
   for (const proposition of structure.propositions) {
     if (structure.backbone?.includes(proposition.id)) continue;
@@ -90,22 +104,26 @@ export function buildViews(structure, evidenceIndex = new Map()) {
     if (!branches.has(root)) branches.set(root, []);
     branches.get(root).push(proposition.id);
   }
-  for (const [root, propositionIds] of branches) {
-    const unique = [...new Set([root, ...propositionIds])].slice(0, 12);
-    const relationIds = (structure.relations || []).filter((relation) => unique.includes(relation.from) && unique.includes(relation.to)).map((relation) => relation.id);
-    views.push({ id: `v${views.length + 1}`, target: `branch:${root}`, graphic: graphicForTopology(structure.topo), props: { propositionIds: unique, relationIds, evidence: Object.fromEntries(unique.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => evidenceIndex.get(item.quote_id)?.text || '').filter(Boolean)])), headline: structure.headline || '', subhead: structure.subhead || '', title: `${structure.topic}·分支细节` } });
+  for (const [root, descendants] of branches) {
+    for (const group of chunk(descendants, 11)) addView({ target: `branch:${root}`, graphic: graphicForTopology(structure.topo), propositionIds: [root, ...group], title: `${structure.topic}·分支细节` });
   }
-  const backboneSet = new Set(structure.backbone || []);
+
   if (structure.overview && structure.backbone?.length && structure.propositions.length <= 12) {
-    const propositionIds = structure.propositions.map((item) => item.id);
-    const relationIds = (structure.relations || []).map((item) => item.id);
-    views.push({ id: `v${views.length + 1}`, target: `branch:${structure.backbone[0]}`, graphic: 'network', props: { propositionIds, relationIds, evidence: Object.fromEntries(propositionIds.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => evidenceIndex.get(item.quote_id)?.text || '').filter(Boolean)])), headline: structure.headline || '', subhead: structure.subhead || '', layout: 'atlas', title: `${structure.topic}·知识总览` } });
+    addView({ target: `branch:${structure.backbone[0]}`, graphic: 'network', propositionIds: propositionIdsAll, title: `${structure.topic}·知识总览`, layout: 'atlas' });
   }
-  for (const group of components(structure)) {
-    if (group.length < 2 || group.some((id) => backboneSet.has(id))) continue;
-    if (views.some((view) => group.every((id) => view.props.propositionIds.includes(id)))) continue;
-    const relationIds = (structure.relations || []).filter((relation) => group.includes(relation.from) && group.includes(relation.to)).map((relation) => relation.id);
-    views.push({ id: `v${views.length + 1}`, target: `branch:${group[0]}`, graphic: graphicForTopology(structure.topo), props: { propositionIds: group, relationIds, evidence: Object.fromEntries(group.map((id) => [id, (structure.propositions.find((item) => item.id === id)?.evidence || []).map((item) => evidenceIndex.get(item.quote_id)?.text || '').filter(Boolean)])), headline: structure.headline || '', subhead: structure.subhead || '', title: `${structure.topic}·旁支细节` } });
+
+  const coveredNodes = new Set(views.flatMap((view) => view.props.propositionIds));
+  for (const id of propositionIdsAll) {
+    if (coveredNodes.has(id)) continue;
+    addView({ target: `branch:${id}`, graphic: graphicForTopology(structure.topo), propositionIds: [id], title: `${structure.topic}·独立命题` });
+    coveredNodes.add(id);
+  }
+
+  const coveredRelations = new Set(views.flatMap((view) => view.props.relationIds));
+  for (const relation of structure.relations || []) {
+    if (coveredRelations.has(relation.id)) continue;
+    addView({ target: `branch:${relation.from}`, graphic: graphicForTopology(structure.topo), propositionIds: [relation.from, relation.to], title: `${structure.topic}·关系细节` });
+    coveredRelations.add(relation.id);
   }
   return views;
 }
@@ -113,13 +131,27 @@ export function buildViews(structure, evidenceIndex = new Map()) {
 export function viewConsistency(structure) {
   const errors = [];
   const byId = new Map(structure.propositions.map((item) => [item.id, item]));
+  const relationById = new Map((structure.relations || []).map((item) => [item.id, item]));
+  const coveredNodes = new Set();
+  const coveredRelations = new Set();
   for (const view of structure.views || []) {
     if (!GRAPHICS.includes(view.graphic)) errors.push(`${view.id}：图种不合法`);
     const expected = graphicForTopology(structure.topo);
     if (view.graphic !== expected && !(structure.topo === 'forest' && view.graphic === 'tree') && view.graphic !== 'turn-band' && view.props?.layout !== 'atlas') errors.push(`${view.id}：图种 ${view.graphic} 与拓扑 ${structure.topo} 不一致`);
     for (const id of view.props?.propositionIds || []) {
       if (!byId.has(id)) errors.push(`${view.id}：引用不存在的命题 ${id}`);
+      coveredNodes.add(id);
+    }
+    for (const id of view.props?.relationIds || []) {
+      const relation = relationById.get(id);
+      if (!relation) errors.push(`${view.id}：引用不存在的关系 ${id}`);
+      else {
+        if (!view.props.propositionIds.includes(relation.from) || !view.props.propositionIds.includes(relation.to)) errors.push(`${view.id}：关系 ${id} 的端点不在图中`);
+        coveredRelations.add(id);
+      }
     }
   }
+  for (const id of byId.keys()) if (!coveredNodes.has(id)) errors.push(`命题 ${id} 没有出现在任何视图里`);
+  for (const id of relationById.keys()) if (!coveredRelations.has(id)) errors.push(`关系 ${id} 没有出现在任何视图里`);
   return errors;
 }

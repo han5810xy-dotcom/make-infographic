@@ -3,7 +3,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { launchBrowser, closeBrowser } from '../../dist/stage/scripts/browser.mjs';
+import { launchBrowser, closeBrowser } from './browser.mjs';
 
 await import('../extension/trace-core.js');
 const TraceCore = globalThis.TraceCore;
@@ -13,7 +13,7 @@ const outDir = join(root, 'make-infographic/eval/access-m1');
 const mockPath = join(outDir, 'mock-qwen.html');
 const tracePath = join(outDir, 'qwen-trace.json');
 const traceMdPath = join(outDir, 'qwen-trace.md');
-const skill = 'C:/Users/13258/.qoder-cn/skills/make-infographic';
+const skill = join(root, 'make-infographic');
 await mkdir(outDir, { recursive: true });
 
 const mock = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>Qwen 测试会话</title></head><body><main>
@@ -60,7 +60,13 @@ await writeFile(traceMdPath, `${TraceCore.traceToMarkdown(extensionTrace)}\n`, '
 
 run([join(root, 'make-infographic/scripts/trace.mjs'), 'import', '--in', traceMdPath, '--out', join(outDir, 'imported-trace.json')]);
 const imported = JSON.parse(await readFile(join(outDir, 'imported-trace.json'), 'utf8'));
-assert.deepEqual(imported.turns.map((turn) => turn.text), extensionTrace.turns.map((turn) => turn.text));
+assert.deepEqual(imported.turns, extensionTrace.turns);
+const special = TraceCore.normalizeTrace(JSON.stringify({ messages: [
+  { role: 'user', text: '第一行\n用户：这不是新轮次\n```\n代码' },
+  { role: 'assistant', text: '回答', thinking: '可见思考\n思考：仍然是思考' },
+] }));
+assert.deepEqual(TraceCore.parseMarkdown(TraceCore.traceToMarkdown(special)).turns, special.turns);
+assert.throws(() => TraceCore.normalizeTrace('{"messages": ['), /JSON|Unexpected|property/i);
 
 const bridgePort = 5391;
 const bridgeWorkspace = join(outDir, 'bridge');
@@ -80,9 +86,14 @@ try {
     });
     bridge.on('exit', (code) => { clearTimeout(timer); reject(new Error(`桥接提前退出 ${code}：${bridgeLogs}`)); });
   });
+  const denied = await fetch(`http://127.0.0.1:${bridgePort}/capture`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(extensionTrace),
+  });
+  assert.equal(denied.status, 401, '无令牌请求必须被拒绝');
+  const token = (await readFile(join(bridgeWorkspace, '.bridge-token'), 'utf8')).trim();
   const response = await fetch(`http://127.0.0.1:${bridgePort}/capture`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-mi-bridge-token': token },
     body: JSON.stringify(extensionTrace),
   });
   const bridgeResult = await response.json();
@@ -126,7 +137,8 @@ const report = {
   visible_thinking_blocks: extensionTrace.turns.filter((turn) => turn.thinking).length,
   artifacts: { extension: extensionPng, import: importPng, skill: skillPng },
   trace: tracePath,
-  limitations: ['扩展捕获在模拟 Qwen DOM 上验收；未登录真实 Qwen 会话。', '可见思考只捕获页面当前展示内容，不读取隐藏推理。'],
+  extension_loaded: false,
+  limitations: ['当前已安装的 Chrome／Edge 不允许命令行加载未打包扩展；捕获规则在模拟 Qwen DOM 上验收，真实扩展运行未实测。', '未登录真实 Qwen 会话。', '可见思考只捕获页面当前展示内容，不读取隐藏推理。'],
 };
 await writeFile(join(outDir, 'm1-results.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 await writeFile(join(outDir, 'm1-results.md'), `# M1 三入口验收\n\n- 结论：通过\n- 入口：Qwen 扩展／网页导入／Skill\n- 轮次：${report.turns}\n- 可见思考块：${report.visible_thinking_blocks}\n- 网页导入解析：${webImportPass ? '通过' : '未通过'}\n- 三条路均生成 PNG\n\n扩展使用模拟 Qwen DOM 验收；未登录真实 Qwen，且只捕获页面可见思考。\n`, 'utf8');

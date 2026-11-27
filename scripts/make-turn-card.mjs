@@ -93,8 +93,10 @@ export async function refreshIndex(ws = WS) {
     cards.sort((a, b) => String(b.data.createdAt || '').localeCompare(String(a.data.createdAt || '')));
     const items = cards.map(({ stem, data, png, svg, pdf, html }) => `<article class="card"><a href="${png || html}">${png ? `<img src="${png}" alt="${esc(data.title)}" loading="lazy">` : '<span>HTML</span>'}</a><h2>${esc(data.title)}</h2><p>${esc(data.createdAt || '')} · 正文 ${data.bodyChars || turnBodyChars(data)} 字${data.demo ? ' · 示例' : ''}</p><p><a href="${stem}.json">内容记录</a> · <a href="${stem}.source.md">原文</a>${svg ? ` · <a href="${svg}">SVG</a>` : ''}${pdf ? ` · <a href="${pdf}">PDF</a>` : ''}</p></article>`).join('');
     const page = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>转弯图集</title><style>*{box-sizing:border-box}body{margin:0;background:#f5f7fc;color:#17181c;font-family:"Microsoft YaHei","PingFang SC",sans-serif}main{max-width:1120px;margin:auto;padding:48px 24px}h1{font-size:36px}p{color:#5c626e}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.card{background:#fff;border:1px solid #dce2ee;border-radius:14px;padding:16px}.card img{width:100%;height:auto;display:block;border-radius:8px}.card h2{font-size:20px;margin:16px 0 8px}.card p{font-size:14px;margin:6px 0}.card a{color:#2f5cff}@media(max-width:760px){.grid{grid-template-columns:1fr}}</style></head><body><main><h1>转弯图集</h1><p>一张图，只记录一次判断改变。</p><div class="grid">${items || '<p>还没有图。</p>'}</div></main></body></html>`;
-    await writeAtomic(join(dir, 'index.html'), page);
-    return { page: join(dir, 'index.html'), count: cards.length };
+    // The unified index belongs to make.mjs; legacy runs must never clobber it.
+    const pagePath = join(dir, 'turn-index.html');
+    await writeAtomic(pagePath, page);
+    return { page: pagePath, count: cards.length };
   });
 }
 

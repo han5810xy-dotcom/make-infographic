@@ -5,6 +5,7 @@
   const bridgeButton = document.getElementById('bridge');
   const status = document.getElementById('status');
   const meta = document.getElementById('meta');
+  const tokenInput = document.getElementById('token');
   let tabId = null;
   let trace = null;
 
@@ -12,6 +13,8 @@
     status.textContent = message;
     status.className = `status${bad ? ' bad' : ''}`;
   };
+
+  chrome.storage.local.get('bridgeToken', (stored) => { tokenInput.value = stored.bridgeToken || ''; });
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
@@ -55,11 +58,14 @@
 
   bridgeButton.addEventListener('click', async () => {
     if (!trace) return;
+    const token = tokenInput.value.trim();
+    if (!token) { say('请先粘贴本机工作目录 .bridge-token 文件里的令牌。', true); return; }
+    chrome.storage.local.set({ bridgeToken: token });
     say('正在发送到本机 127.0.0.1:5278…');
     try {
       const response = await fetch('http://127.0.0.1:5278/capture', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'x-mi-bridge-token': token },
         body: JSON.stringify(trace),
       });
       const result = await response.json();

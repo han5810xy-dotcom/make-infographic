@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="普通总结与有证据的知识结构总览对照" />
 
-下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.0.0.zip](dist/make-infographic-2.0.0.zip)，放在同一个文件夹，然后运行：
+下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.0.1.zip](dist/make-infographic-2.0.1.zip)，放在同一个文件夹，然后运行：
 
 ```powershell
 node install.mjs
