@@ -1,6 +1,8 @@
 # AI remembers every conversation. You remember one image.
 
-<img src="assets/demo.gif?v=3" width="720" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+
+<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="100%" alt="A 600-character summary beside the four-part turn card" />
 
 **Before → Collision → Correction → Takeaway.** Not a summary — a record of how your thinking changed.
 
@@ -29,9 +31,9 @@ Then select a conversation in Qoder and say: **出图**.
 ## Three examples
 
 <p align="center">
-  <a href="examples/01-curiosity/"><img src="assets/01-curiosity.png" width="220" alt="Curiosity and spaced repetition" /></a>
-  <a href="examples/02-skip-signal/"><img src="assets/02-skip-signal.png" width="220" alt="Skipping is evidence" /></a>
-  <a href="examples/03-repeat-node/"><img src="assets/03-repeat-node.png" width="220" alt="Repeat nodes, not cards" /></a>
+  <a href="examples/01-curiosity/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/01-curiosity.png?v=1" width="220" alt="Curiosity and spaced repetition" /></a>
+  <a href="examples/02-skip-signal/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/02-skip-signal.png?v=1" width="220" alt="Skipping is evidence" /></a>
+  <a href="examples/03-repeat-node/"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/03-repeat-node.png?v=1" width="220" alt="Repeat nodes, not cards" /></a>
 </p>
 
 - [Curiosity and spaced repetition](examples/01-curiosity/): the forgetting curve is also a curiosity supply curve.
