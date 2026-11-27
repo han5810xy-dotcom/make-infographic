@@ -1,10 +1,13 @@
 # AI remembers every conversation. You remember one image.
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/demo.gif?v=4" width="720" height="405" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
 
-<img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="100%" alt="A 600-character summary beside the four-part turn card" />
-
-**Before → Collision → Correction → Takeaway.** Not a summary — a record of how your thinking changed.
+<table>
+<tr>
+<td width="55%"><a href="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1"><img src="https://han5810xy-dotcom.github.io/make-infographic/assets/before-after.png?v=1" width="480" height="300" alt="A 600-character summary beside the four-part turn card" /></a></td>
+<td><strong>Before → Collision → Correction → Takeaway.</strong><br />Not a summary — a record of how your thinking changed.</td>
+</tr>
+</table>
 
 ## Try it without installing
 
