@@ -1,6 +1,6 @@
 # AI 记得每一次对话，你只记得住一张图。
 
-<img src="assets/demo.gif" width="720" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
+<img src="assets/demo.gif?v=2" width="720" alt="在 Qoder 中选中对话，输入出图，生成四块转弯图" />
 
 **原以为 → 撞车 → 正解 → 一句带走。** 不是摘要，是记录你怎么想通的。
 
