@@ -1,6 +1,6 @@
 # AI remembers every conversation. You remember one image.
 
-<img src="assets/demo.gif?v=2" width="720" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
+<img src="assets/demo.gif?v=3" width="720" alt="Select a conversation in Qoder, type 出图, and get a four-part turn card" />
 
 **Before → Collision → Correction → Takeaway.** Not a summary — a record of how your thinking changed.
 
