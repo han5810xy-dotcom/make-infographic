@@ -4,7 +4,7 @@ import { stableQuoteId } from './contract.mjs';
 export const PROPOSITION_KINDS = Object.freeze(['定义', '主张', '因果', '条件', '对比', '步骤', '例子', '例外', '数据']);
 export const RELATION_KINDS = Object.freeze(['因果', '递进', '对比', '条件', '转折', '包含', '支持', '反驳']);
 export const TOPOLOGIES = Object.freeze(['chain', 'tree', 'matrix', 'network', 'cycle', 'forest']);
-export const GRAPHICS = Object.freeze(['flow', 'tree', 'matrix', 'network', 'timeline', 'pyramid', 'turn-band']);
+export const GRAPHICS = Object.freeze(['flow', 'tree', 'matrix', 'network', 'turn-band']);
 export const PROVENANCE = Object.freeze(['quote', 'summary', 'inferred']);
 export const LAYERS = Object.freeze(['main', 'branch', 'example', 'background']);
 export const VIEW_TARGETS = Object.freeze(['backbone', 'branch']);
@@ -12,6 +12,11 @@ export const VIEW_TARGETS = Object.freeze(['backbone', 'branch']);
 const compact = (value) => String(value ?? '').toLowerCase().replace(/[\s，。！？；：、,.!?;:"“”‘’'()（）《》〈〉「」『』\[\]—…]/g, '');
 export const visibleLen = (value) => [...String(value ?? '').replace(/\s/g, '')].length;
 export const sha256 = (value) => createHash('sha256').update(String(value ?? ''), 'utf8').digest('hex');
+
+export function stableConceptId(proposition) {
+  const material = [proposition.kind, compact(proposition.text)].join('\u0000');
+  return `c_${sha256(material).slice(0, 16)}`;
+}
 
 export function stablePropositionId(proposition, index = 0) {
   const material = [proposition.kind, proposition.layer, proposition.provenance, proposition.text, ...(proposition.evidence || []).map((item) => item.quote_id)].join('\u0000');
@@ -34,6 +39,7 @@ export function structureId(structure) {
       kind: item.kind,
       layer: item.layer || 'main',
       text: item.text,
+      concept_id: item.concept_id,
       evidence: (item.evidence || []).map((evidence) => [evidence.quote_id, evidence.speaker, evidence.turn_index, evidence.verbatim]),
       weight: item.weight,
       provenance: item.provenance,
@@ -97,6 +103,7 @@ export function validateProposition(proposition, index) {
   if (!proposition || typeof proposition !== 'object') return ['命题不是对象'];
   if (!/^p\d+(?:_[a-f0-9]{8})?$/.test(proposition.id || '')) errors.push(`${proposition.id || '未编号'}：id 必须形如 p1 或 p1_abcd1234`);
   if (!PROPOSITION_KINDS.includes(proposition.kind)) errors.push(`${proposition.id}：kind 不在允许列表内`);
+  if (!/^c_[a-f0-9]{16}$/.test(proposition.concept_id || '')) errors.push(`${proposition.id}：concept_id 不合法`);
   if (!proposition.text || visibleLen(proposition.text) > 60) errors.push(`${proposition.id}：命题为空或超过 60 字`);
   if (!Array.isArray(proposition.evidence) || !proposition.evidence.length) errors.push(`${proposition.id}：没有 evidence`);
   if (Array.isArray(proposition.evidence) && proposition.evidence.length > 2) errors.push(`${proposition.id}：evidence 最多两条`);
@@ -254,7 +261,7 @@ export function finalizeStructure(input) {
   structure.propositions = ordered.map((proposition, index) => {
     const id = stablePropositionId(proposition, index);
     idMap.set(proposition.id, id);
-    return { ...proposition, id };
+    return { ...proposition, id, concept_id: stableConceptId(proposition) };
   });
   const relationIdMap = new Map();
   structure.relations = (structure.relations || []).map((relation, index) => {

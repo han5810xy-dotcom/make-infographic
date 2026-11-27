@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="本地学习工作台：用自己的话回忆，再回到原对话核对证据。">
+  <title>学习工作台 · make-infographic</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到主要内容</a>
+  <header class="top">
+    <div class="brand">make-infographic <span>学习工作台</span></div>
+    <div class="local"><span class="dot" aria-hidden="true"></span>只在本机运行</div>
+  </header>
+  <main id="main" class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">从“看过了”到“我能说清楚”</p>
+      <h1 id="page-title">先写自己的话，<br>再回到原对话。</h1>
+      <p class="lede">只记录你的学习证据，不自动判分，不证明掌握。</p>
+    </section>
+
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <section id="fatal" class="panel empty" role="alert" hidden>
+      <h2>无法打开本地工作台</h2>
+      <p id="fatal-text">请从命令行打印的完整地址打开，包括 # 后面的本机令牌。</p>
+    </section>
+
+    <div id="workbench" hidden>
+      <nav class="tabs" role="tablist" aria-label="学习工作台面板">
+        <button id="tab-review" role="tab" aria-selected="true" aria-controls="panel-review" tabindex="0">对话复习</button>
+        <button id="tab-graph" role="tab" aria-selected="false" aria-controls="panel-graph" tabindex="-1">概念图谱</button>
+        <button id="tab-explanations" role="tab" aria-selected="false" aria-controls="panel-explanations" tabindex="-1">我的解释</button>
+        <button id="tab-archive" role="tab" aria-selected="false" aria-controls="panel-archive" tabindex="-1">档案</button>
+      </nav>
+
+      <section id="panel-review" class="panel" role="tabpanel" aria-labelledby="tab-review" tabindex="0">
+        <div class="section-head">
+          <div><p class="kicker">01 / 提取练习</p><h2>这一刻，不看资料</h2></div>
+          <button class="quiet" id="refresh-review" type="button">刷新到期</button>
+        </div>
+        <p class="hint">题目来自你过去的 AI 对话。提示语只给线索，不展示原命题或证据。</p>
+        <div id="review-content" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-graph" class="panel" role="tabpanel" aria-labelledby="tab-graph" tabindex="0" hidden>
+        <div class="section-head">
+          <div><p class="kicker">02 / 看见关联</p><h2>概念图谱</h2></div>
+          <button class="quiet" id="refresh-graph" type="button">刷新图谱</button>
+        </div>
+        <p class="hint">连线来自原对话中的关系。节点只标记已有学习记录的类型，不合并成单一分数。</p>
+        <div id="graph-detail" class="graph-detail" hidden></div>
+        <div id="graph-content"></div>
+      </section>
+
+      <section id="panel-explanations" class="panel" role="tabpanel" aria-labelledby="tab-explanations" tabindex="0" hidden>
+        <div class="section-head">
+          <div><p class="kicker">03 / 回看变化</p><h2>我的解释</h2></div>
+          <button class="quiet" id="refresh-explanations" type="button">刷新记录</button>
+        </div>
+        <p class="hint">这里按时间保存你的原话。每次都可打开对应来源，看看当时对话怎样支持这个判断。</p>
+        <div id="timeline"></div>
+      </section>
+
+      <section id="panel-archive" class="panel" role="tabpanel" aria-labelledby="tab-archive" tabindex="0" hidden>
+        <div class="section-head">
+          <div><p class="kicker">04 / 学习证据</p><h2>档案</h2></div>
+          <button class="quiet" id="refresh-archive" type="button">刷新档案</button>
+        </div>
+        <p class="hint">次数与类型只描述你留下了哪些学习证据，不代表理解程度。</p>
+        <div id="archive-content"></div>
+        <div class="export-row">
+          <div><h3>把证据带走</h3><p>导出原始概念、来源关系和学习事件，便于备份或迁移。文件只下载到你的电脑。</p></div>
+          <button id="export" class="primary" type="button">导出 JSON</button>
+        </div>
+      </section>
+    </div>
+    <footer class="foot"><span>文本不离开这台电脑</span><span>无账号 · 无云端 · 无自动评分</span></footer>
+  </main>
+
+  <dialog id="source-dialog" aria-labelledby="source-title">
+    <div class="dialog-head"><h2 id="source-title">原对话证据</h2><button id="close-dialog" class="quiet" type="button" aria-label="关闭证据窗口">关闭</button></div>
+    <div id="source-content"></div>
+  </dialog>
+</body>
+</html>

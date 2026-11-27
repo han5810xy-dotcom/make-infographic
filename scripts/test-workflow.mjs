@@ -25,5 +25,11 @@ assert.ok(result.structure.propositions.every((item) => item.weight >= 0 && item
 assert.ok(result.structure.views.length >= 1);
 assert.deepEqual(validateStructure(result.structure, { evidenceIndex: result.evidenceIndex }).errors, []);
 assert.ok(result.stats.propositions >= 3);
+const explicit = structuredClone(authored);
+explicit.topo = 'tree';
+explicit.views = [{ id: 'author_view', target: 'backbone', graphic: 'tree', props: { propositionIds: ['p1', 'p2', 'p3'], relationIds: ['r1'], evidence: {}, title: '作者指定视图' } }];
+const explicitResult = await runKnowledgeWorkflow(source, { authored: explicit });
+assert.equal(explicitResult.structure.topo, 'tree');
+assert.equal(explicitResult.structure.views[0].id, 'author_view');
 console.log(JSON.stringify(result.stats, null, 2));
 console.log('workflow OK');

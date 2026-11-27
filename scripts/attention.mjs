@@ -1,4 +1,4 @@
-import { visibleLen } from './knowledge-contract.mjs';
+import { visibleLen, TOPOLOGIES } from './knowledge-contract.mjs';
 
 const compact = (value) => String(value ?? '').toLowerCase().replace(/[\s，。！？；：、,.!?;:"“”‘’'()（）《》〈〉「」『』\[\]—…]/g, '');
 const QUESTION = /[？?]|为什么|怎么|如何|是否|能不能|难道|凭什么|凭什么|why|how|whether/i;
@@ -266,7 +266,9 @@ export function buildFramework(structure, collected, evidenceIndex) {
     propositions: next.propositions.filter((item) => backboneIds.has(item.id)),
     relations: (next.relations || []).filter((relation) => backboneIds.has(relation.from) && backboneIds.has(relation.to)),
   };
-  next.topo = next.backbone.length ? inferTopology(backboneStructure) : inferTopology(next);
+  next.topo = next.topo_source === 'authored' && TOPOLOGIES.includes(next.topo)
+    ? next.topo
+    : next.backbone.length ? inferTopology(backboneStructure) : inferTopology(next);
   next.gaps = [...(next.gaps || [])];
   const connected = new Set((next.relations || []).flatMap((relation) => [relation.from, relation.to]));
   for (const proposition of next.propositions) {
@@ -275,7 +277,7 @@ export function buildFramework(structure, collected, evidenceIndex) {
   }
   if (!next.backbone.length) {
     if (!next.gaps.some((gap) => gap.missing === '并列清单，没有单一骨架')) next.gaps.push({ missing: '并列清单，没有单一骨架', why: backbone.reason });
-    if (next.topo !== 'forest') next.topo = 'forest';
+    if (next.topo_source !== 'authored' && next.topo !== 'forest') next.topo = 'forest';
   }
   return next;
 }

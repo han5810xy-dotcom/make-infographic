@@ -107,9 +107,11 @@
     if (Array.isArray(data)) data = { messages: data };
     if (data?.schema_version === 'trace.v1' && Array.isArray(data.turns)) {
       const turns = finalizeTurns(data.turns);
+      const id = hash(turns.map((turn) => `${turn.speaker}\u0000${turn.text}\u0000${turn.thinking}`).join('\u0001'));
+      if (data.id && data.id !== id) throw new Error('Trace id 与内容不一致，可能被改动过。');
       return {
         schema_version: 'trace.v1',
-        id: data.id || hash(turns.map((turn) => `${turn.speaker}\u0000${turn.text}\u0000${turn.thinking}`).join('\u0001')),
+        id,
         source: { type: data.source?.type || meta.type || 'import', url: data.source?.url || meta.url || '', title: data.source?.title || meta.title || '', captured_at: data.source?.captured_at || meta.captured_at || new Date().toISOString() },
         turns,
         attachments: Array.isArray(data.attachments) ? data.attachments : [],

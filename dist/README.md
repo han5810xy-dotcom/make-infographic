@@ -1,10 +1,10 @@
-# 对话 → 知识结构（make-infographic）2.0.0
+# 对话 → 知识结构（make-infographic）2.1.0
 
 先立命题与关系，再决定它长成什么图。每个结论、每条边、每个缺口都能回到原句。
 
 ## 安装
 
-把 `install.mjs` 和 `make-infographic-2.0.0.zip` 放在同一个文件夹，运行：
+把 `install.mjs` 和 `make-infographic-2.1.0.zip` 放在同一个文件夹，运行：
 
 ```powershell
 node install.mjs
@@ -37,6 +37,15 @@ node "%USERPROFILE%\.qoder-cn\skills\make-infographic\scripts\make.mjs" --demo
 - `.source.md`：归档原文。
 
 旧版 turn card 保留在 `scripts/make-turn-card.mjs`，不再是默认入口。
+
+## 学习
+
+```bat
+node "%USERPROFILE%\.qoder-cn\skills\make-infographic\scripts\learn.mjs" due
+node "%USERPROFILE%\.qoder-cn\skills\make-infographic\scripts\learn.mjs" serve --port 5279
+```
+
+先写自己的解释，再揭示原对话证据。工作台只监听本机；不自动判分，不生成掌握率。 `.knowledge/` 是私有学习数据，不进入公开包。
 
 ## 作者结构
 

@@ -4,6 +4,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { launchBrowser, closeBrowser } from './browser.mjs';
+import { collectDialogue } from './collect.mjs';
 
 await import('../extension/trace-core.js');
 const TraceCore = globalThis.TraceCore;
@@ -61,6 +62,9 @@ await writeFile(traceMdPath, `${TraceCore.traceToMarkdown(extensionTrace)}\n`, '
 run([join(root, 'make-infographic/scripts/trace.mjs'), 'import', '--in', traceMdPath, '--out', join(outDir, 'imported-trace.json')]);
 const imported = JSON.parse(await readFile(join(outDir, 'imported-trace.json'), 'utf8'));
 assert.deepEqual(imported.turns, extensionTrace.turns);
+const collected = collectDialogue(TraceCore.traceToMarkdown(extensionTrace));
+assert.equal(collected.utterances.length, 2);
+assert.ok(collected.utterances[1].thinking.includes('区分熟悉感与独立回忆'));
 const special = TraceCore.normalizeTrace(JSON.stringify({ messages: [
   { role: 'user', text: '第一行\n用户：这不是新轮次\n```\n代码' },
   { role: 'assistant', text: '回答', thinking: '可见思考\n思考：仍然是思考' },

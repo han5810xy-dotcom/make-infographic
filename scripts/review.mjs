@@ -149,7 +149,8 @@ export async function confirmCard(workspace, id, { now = Date.now() } = {}) {
     if (!full) throw new Error(`找不到卡片：${id}`);
     const state = review.cards[id] || emptyState({ id, ...full.record.card }, now);
     if (!state.lastAnswer) throw new Error('还没有留下答案，先运行 answer。');
-    review.cards[id] = { ...scheduleReview(state, { correct: true, now }), status: 'confirmed' };
+    if (state.status === 'confirmed' && state.lastConfirmedAnswer === state.lastAnswer) return state;
+    review.cards[id] = { ...scheduleReview(state, { correct: true, now }), status: 'confirmed', lastConfirmedAnswer: state.lastAnswer };
     await writeAtomic(reviewPath(workspace), JSON.stringify(review, null, 2));
     await setCardStatus(workspace, id, 'confirmed');
     return review.cards[id];

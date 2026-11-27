@@ -35,7 +35,7 @@ try {
   page.on('response', (response) => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   for (const width of [375, 1080]) {
     await page.setViewport({ width, height: 900 });
-    for (const name of ['index', 'library', 'structure', 'profile', 'ambient', 'import']) {
+    for (const name of ['index', 'demo', 'library', 'structure', 'profile', 'ambient', 'import']) {
       await page.goto(`${base}/${name}.html`, { waitUntil: 'networkidle0' });
       const metrics = await page.evaluate(() => ({
         title: document.title,

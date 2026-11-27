@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="A plain summary beside an evidence-grounded knowledge atlas" />
 
-Download [install.mjs](dist/install.mjs) and [make-infographic-2.0.1.zip](dist/make-infographic-2.0.1.zip) into the same folder, then run:
+Download [install.mjs](dist/install.mjs) and [make-infographic-2.1.0.zip](dist/make-infographic-2.1.0.zip) into the same folder, then run:
 
 ```powershell
 node install.mjs
@@ -39,19 +39,33 @@ The turn band remains available: **Before → Collision → Correction → Takea
 
 ## Website
 
-- [Card library](site/web/library.html): search by topic, date, status, and keyword.
-- [Knowledge structure](site/web/structure.html): move from atlas to backbone to evidence.
-- [Profile](site/web/profile.html): output history, topic distribution, and timeline.
-- [Ambient art](site/web/ambient.html): a separate decorative and commemorative output, stored separately from infographics.
+- [Card library](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/library.html): search by topic, status, and keyword.
+- [Knowledge structure](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/structure.html): move from atlas to backbone to evidence.
+- [Profile](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/profile.html): output history, topic distribution, and timeline.
+- [Ambient art](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/ambient.html): a separate decorative and commemorative output, stored separately from infographics.
+
+## From diagrams to learning
+
+Successful renders sync into the local `.knowledge/` store. The same proposition keeps one `concept_id` across dialogues, while sources, evidence, and learning events retain separate identities.
+
+```bash
+node scripts/learn.mjs due
+node scripts/learn.mjs prompt <concept_id> --route explain
+node scripts/learn.mjs answer <concept_id> --route explain --self-report without_looking --answer "your own words"
+node scripts/learn.mjs reveal <event_id>
+node scripts/learn.mjs serve --port 5279
+```
+
+The workbench collects the answer before revealing the source proposition and evidence. It includes a concept graph, the learner's explanation timeline, and per-route evidence records. It does not auto-grade or invent a mastery score. Learning bundles can be exported and restored on another machine.
 
 ## Acceptance numbers
 
-- 50 private real dialogues: 453 propositions and 28 relations; every final relation passed independent model audit against its source sentence.
+- 50 private real dialogues: 471 propositions and 28 audited relations; 457 rendered images with 0 HTML fallbacks.
 - Key-conclusion coverage: 91.3%. Topology consistency: 100%. Cross-view wording errors: 0.
-- 97 images, 0 HTML fallbacks, 100% output rate.
-- 101 cards imported into the website; local search took 0.8ms and every card links to its source dialogue.
+- 24 render-width checks and 14 website checks; installers validate CRCs, stage changes, and roll back failures.
+- Learning regressions cover cross-session identity, retrieval before reveal, append-only answers, export/restore, and concurrent writes.
 
-These are engineering and structure-acceptance numbers, not proof of learning effectiveness. Private dialogues and evaluation data are excluded from public packages. Live Qoder/Qwen login-state checks and human expert review remain separate.
+These are engineering and structure-acceptance numbers, not proof of learning effectiveness. Private dialogues, answers, and evaluation data are excluded from public packages. Live Qwen extension checks and human expert review remain separate.
 
 ## Boundaries
 

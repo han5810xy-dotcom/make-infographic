@@ -4,7 +4,7 @@
 
 <img src="docs/assets/before-after-v2.png?v=1" width="720" height="450" alt="普通总结与有证据的知识结构总览对照" />
 
-下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.0.1.zip](dist/make-infographic-2.0.1.zip)，放在同一个文件夹，然后运行：
+下载 [install.mjs](dist/install.mjs) 和 [make-infographic-2.1.0.zip](dist/make-infographic-2.1.0.zip)，放在同一个文件夹，然后运行：
 
 ```powershell
 node install.mjs
@@ -39,19 +39,33 @@ node install.mjs
 
 ## 网站汇总
 
-- [卡片库](site/web/library.html)：主题、时间、状态与关键词检索。
-- [知识结构](site/web/structure.html)：从总览进入主干，再沿证据进入细节。
-- [个人档案](site/web/profile.html)：出图历史、主题分布与时间线。
-- [意境图](site/web/ambient.html)：独立第二出口，只做装饰与纪念，与信息图分开存储。
+- [卡片库](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/library.html)：主题、状态与关键词检索。
+- [知识结构](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/structure.html)：从总览进入主干，再沿证据进入细节。
+- [个人档案](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/profile.html)：出图历史、主题分布与时间线。
+- [意境图](https://chat-to-infographic-ue17fe4mvg7.qoder.zone/ambient.html)：独立第二出口，只做装饰与纪念，与信息图分开存储。
+
+## 从图到学习
+
+每次出图都会同步到本机 `.knowledge/`。同一条命题在不同对话里保持同一个 `concept_id`，来源、证据和学习事件分别保存。
+
+```bash
+node scripts/learn.mjs due
+node scripts/learn.mjs prompt <concept_id> --route explain
+node scripts/learn.mjs answer <concept_id> --route explain --self-report without_looking --answer "自己的话"
+node scripts/learn.mjs reveal <event_id>
+node scripts/learn.mjs serve --port 5279
+```
+
+工作台先收回答，再揭示原命题与证据；提供概念图谱、自己的解释时间线和分路径档案。它不自动判分，不生成“掌握率”。学习包可完整导出并在另一台机器恢复。
 
 ## 验收数字
 
-- 50 段私有真实对话：453 条命题、28 条关系；最终关系全部通过独立模型原句审计。
+- 50 段私有真实对话：471 条命题、28 条经核对关系；最终输出 457 张图，HTML 降级 0。
 - 关键结论覆盖率 91.3%；图种拓扑一致率 100%；多图编号与措辞错误 0。
-- 输出 97 张图，HTML 降级 0，出图率 100%。
-- 101 张卡片导入网站后，本地检索 0.8ms；每张卡都有来源对话链接。
+- 24 组渲染宽度检查、14 组网页检查；安装包支持 CRC 校验、暂存安装与失败回滚。
+- 学习回路覆盖跨会话身份、先提取后揭示、追加式作答、导出／恢复与并发写入。
 
-这些是工程与结构验收数字，不等于学习效果已被证明。私有对话与验收数据不进入公开发布包；真实 Qwen 登录态和人类专家复核仍需单独确认。
+这些是工程与结构验收数字，不等于学习效果已被证明。私有对话、学习答案与验收数据不进入公开发布包；真实 Qwen 登录态和人类专家复核仍需单独确认。
 
 ## 边界
 

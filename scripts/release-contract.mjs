@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 
-export const VERSION = '2.0.1';
+export const VERSION = '2.1.0';
 export const ARCHIVE_NAME = `make-infographic-${VERSION}.zip`;
 export const REQUIRED_FILES = Object.freeze([
   'SKILL.md',
@@ -15,6 +15,7 @@ export const REQUIRED_FILES = Object.freeze([
   ...Object.freeze([
     'make.mjs', 'make-turn-card.mjs', 'render-structure.mjs', 'visual-syntax.mjs',
     'workflow.mjs', 'output-checks.mjs', 'knowledge-contract.mjs',
+    'learning-core.mjs', 'learn.mjs', 'learn-server.mjs', 'publish.mjs',
     'knowledge-authoring.mjs', 'knowledge.mjs', 'propositionize.mjs', 'relations.mjs',
     'attention.mjs', 'views.mjs', 'ambient.mjs', 'trace.mjs', 'render.mjs',
     'turn-card.mjs', 'browser.mjs', 'console.mjs', 'safeio.mjs', 'artifacts.mjs',
@@ -37,6 +38,9 @@ export const REQUIRED_FILES = Object.freeze([
   'extension/popup.html',
   'extension/popup.js',
   'extension/background.js',
+  'web/learn/index.html',
+  'web/learn/app.js',
+  'web/learn/styles.css',
 ]);
 
 export const ALLOWED_FILES = Object.freeze([...REQUIRED_FILES, 'LICENSE']);

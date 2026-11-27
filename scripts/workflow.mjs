@@ -95,6 +95,7 @@ async function runSingle(source, collected, authored, proposed = null) {
   structure = finalizeStructure(structure);
   steps.push({ step: 3, name: '理解对话内容', key_conclusions: structure.coverage?.total || 0, coverage: structure.coverage?.ratio ?? 1, gaps: structure.gaps.length });
 
+  const resolvedViews = structure.views;
   structure = buildFramework(structure, collected, evidenceIndex);
   structure = finalizeStructure(structure);
   const relationErrors = validateRelationsSemantics(structure, evidenceIndex);
@@ -102,7 +103,7 @@ async function runSingle(source, collected, authored, proposed = null) {
   steps.push({ step: 4, name: '逻辑提炼', relations: structure.relations.length, kinds: [...new Set(structure.relations.map((item) => item.kind))] });
 
   steps.push({ step: 5, name: '构建结构框架', backbone: structure.backbone.length, topo: structure.topo, weights: structure.propositions.map((item) => Number(item.weight.toFixed(3))) });
-  structure.views = buildViews(structure, evidenceIndex);
+  structure.views = resolvedViews?.length ? resolvedViews : buildViews(structure, evidenceIndex);
   structure = finalizeStructure(structure);
   const consistency = viewConsistency(structure);
   if (consistency.length) throw new Error(`图种选择未通过：${consistency.join('；')}`);

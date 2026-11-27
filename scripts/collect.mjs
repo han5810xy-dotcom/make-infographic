@@ -69,7 +69,7 @@ function parseUtterances(source) {
   const flush = () => {
     if (!current) return;
     const text = current.lines.join('\n').trim();
-    if (text) utterances.push({ speaker: current.speaker, turn_index: Number.isInteger(current.turn_index) && current.turn_index >= 0 ? current.turn_index : utterances.length, text });
+    if (text) utterances.push({ speaker: current.speaker, turn_index: Number.isInteger(current.turn_index) && current.turn_index >= 0 ? current.turn_index : utterances.length, text, ...(current.thinking ? { thinking: current.thinking } : {}) });
     current = null;
   };
   const start = (speaker, remainder = '') => {
@@ -91,7 +91,7 @@ function parseUtterances(source) {
         if (header) {
           flush();
           sawMarker = true;
-          fencedTurn = { speaker: SPEAKERS.includes(header.speaker) ? header.speaker : 'assistant', turn_index: header.index, lines: [] };
+          fencedTurn = { speaker: SPEAKERS.includes(header.speaker) ? header.speaker : 'assistant', turn_index: header.index, thinking: String(header.thinking || '').replace(/\r\n/g, '\n').trim(), lines: [] };
           current = fencedTurn;
         }
       } else if (fenceMatch[1][0] === fence.marker[0] && fenceMatch[1].length >= fence.marker.length && !fenceMatch[2].trim()) {

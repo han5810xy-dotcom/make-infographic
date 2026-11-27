@@ -24,16 +24,18 @@ description: 把一段 AI 对话先解析成有证据的知识结构，再投影
 5. **构建框架**：抽出 3~5 条 backbone；并列清单明确输出「这段对话是并列清单，没有单一骨架」。
 6. **按拓扑选图**：chain→flow，tree→tree，matrix→matrix，network→network，cycle→network，forest→多张 tree。
 7. **检查**：来源、方向、层级、节点数、内部字段、省略号、多图一致性、缺口显式呈现。
-8. **输出**：主图 + 每个分支最多一张细节图；需要时加知识总览。
+8. **输出**：主图 + 分页后的分支细节图；需要时加知识总览。成功出图后同步跨对话学习库。
 
 ## 三、数据契约
 
 ```js
 Proposition = {
-  id, kind, text, // kind: 定义|主张|因果|条件|对比|步骤|例子|例外|数据
+  id, concept_id, kind, layer, text, // layer: main|branch|example|background
   evidence: [{ quote_id, speaker, turn_index, verbatim }],
-  weight, provenance // quote|summary|inferred
+  weight, provenance, // quote|summary|inferred
+  probe_questions // 可选：recall|explain|apply|transfer 的不含答案题干
 }
+// kind: 定义|主张|因果|条件|对比|步骤|例子|例外|数据
 Relation = {
   id, from, to, kind, // 因果|递进|对比|条件|转折|包含|支持|反驳
   evidence: [{ quote_id, verbatim: true }], strength
@@ -93,13 +95,27 @@ node "$SKILL/bridge/server.mjs" --workspace 本机工作目录
 node "$SKILL/scripts/make-turn-card.mjs" --in .source.md --out 主题
 ```
 
-## 七、校验与降级
+## 七、跨对话学习回路
+
+出图后，同一命题在不同对话中保持同一个 `concept_id`。需要复习时：
+
+```bash
+node "$SKILL/scripts/learn.mjs" due
+node "$SKILL/scripts/learn.mjs" prompt <concept_id> --route explain
+node "$SKILL/scripts/learn.mjs" answer <concept_id> --route explain --self-report without_looking --answer "自己的话"
+node "$SKILL/scripts/learn.mjs" reveal <event_id>
+node "$SKILL/scripts/learn.mjs" serve --port 5279
+```
+
+先写自己的话，再揭示原命题与原句证据。`self_report` 只是学习者自述，不是正确率；系统不得用词面重合假装判分。学习账本 append-only，可导出、可迁移、可重放。`.knowledge/` 是私有数据，不进入公开网站或发布包。
+
+## 八、校验与降级
 
 出图前执行 12 条检查：节点来源、边证据、悬空节点、孤立关系、箭头方向、例子层级、骨架、节点上限、内部字段、省略号、多图一致、缺口可见。
 
 失败顺序：换视图 → 拆图 → 只出 HTML。禁止以“校验失败”结束，禁止把 PNG 当唯一资产。
 
-## 八、网站与意境图
+## 九、网站与意境图
 
 网站源码在 `site/web/`：卡片库、知识结构、个人档案、时间线。每张图都能点回来源对话。
 
@@ -122,6 +138,8 @@ node "$SKILL/scripts/ambient.mjs" import --brief 意境图brief.json --image 生
 - `scripts/attention.mjs`：注意力权重、骨架与拓扑。
 - `scripts/views.mjs`：主图、分支细节与知识总览。
 - `scripts/output-checks.mjs`：12 条检查与降级。
+- `scripts/learning-core.mjs`：跨对话概念、学习事件、排期与可恢复导出。
+- `scripts/learn.mjs` / `scripts/learn-server.mjs`：先提取后揭示的本地学习入口与工作台。
 - `scripts/render-structure.mjs` / `scripts/visual-syntax.mjs`：结构化 SVG／HTML／PNG。
 - `scripts/ambient.mjs`：独立意境图出口。
 - `scripts/make-turn-card.mjs`：旧版实验入口。

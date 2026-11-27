@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { startCli } from './console.mjs';
 import { collectDialogue } from './collect.mjs';
 import { resolveAuthoring } from './knowledge-authoring.mjs';
-import { evidenceIndexFromCollected, validateStructure } from './knowledge-contract.mjs';
+import { validateStructure } from './knowledge-contract.mjs';
 import { buildPropositions } from './propositionize.mjs';
 import { runKnowledgeWorkflow } from './workflow.mjs';
 
@@ -71,10 +71,20 @@ async function main(argv) {
     if (!out) throw new Error(usage);
     const authored = authoredPath ? JSON.parse(await readFile(resolve(authoredPath), 'utf8')) : null;
     const result = await runKnowledgeWorkflow(source, { authored });
-    await writeJson(out, result.structure);
-    await writeJson(sidecarPath(out), Object.fromEntries(result.evidenceIndex));
+    if (result.structures.length === 1) {
+      await writeJson(out, result.structure);
+      await writeJson(sidecarPath(out), Object.fromEntries(result.evidenceIndex));
+    } else {
+      const bundle = { schema_version: 'knowledge-bundle.v1', structures: result.structures, stats: result.stats };
+      await writeJson(out, bundle);
+      await writeJson(sidecarPath(out), Object.fromEntries(result.evidenceIndex));
+      for (let index = 0; index < result.structures.length; index++) {
+        const stem = out.replace(/\.json$/i, '');
+        await writeJson(`${stem}-${String(index + 1).padStart(2, '0')}.json`, result.structures[index]);
+      }
+    }
     console.log(`八步工作流完成：${result.stats.propositions} 条命题，${result.stats.relations} 条关系，${result.stats.views} 个视图。`);
-    console.log(`结构已写出：${resolve(out)}`);
+    console.log(`结构已写出：${resolve(out)}（${result.structures.length} 份）`);
     return 0;
   }
   if (command === 'check') {
@@ -84,7 +94,7 @@ async function main(argv) {
     const sidecar = sidecarPath(structurePath);
     let evidenceIndex;
     try { evidenceIndex = new Map(Object.entries(JSON.parse(await readFile(sidecar, 'utf8')))); }
-    catch { evidenceIndex = evidenceIndexFromCollected(collectDialogue(source)); }
+    catch (error) { throw new Error(`缺少或读不懂证据索引 ${sidecar}；请用原结构重新出图，避免绕过来源核验。`); }
     const stage = arg(argv, 'stage') || 'all';
     const result = validateStructure(structure, { evidenceIndex, stage });
     for (const warning of result.warnings) console.log(`提醒：${warning}`);

@@ -7,12 +7,14 @@ import { withArtifactLock } from './artifacts.mjs';
 import { runKnowledgeWorkflow } from './workflow.mjs';
 import { checkOutput, degradeStructure } from './output-checks.mjs';
 import { buildStructureHtml, buildStructureSvg, renderStructurePng } from './render-structure.mjs';
-import { visibleLen } from './knowledge-contract.mjs';
+import { visibleLen, sha256 } from './knowledge-contract.mjs';
+import { syncLearning } from './learning-core.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const FLAGS = ['spec', 'in', 'source', 'out', 'scale', 'html-only', 'demo', 'help', ...WORKDIR_FLAGS];
 const slug = (value) => String(value || '知识结构').replace(/[\\/:*?"<>|\s，。：；、！？]+/g, '').slice(0, 40) || '知识结构';
 const stamp = (date = new Date()) => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 function fallbackHtml(structure, findings) {
   const rows = findings.map((item) => `<li><b>${item.title}</b>：${item.message}<br><span>动作：${item.action}</span></li>`).join('');
@@ -30,7 +32,7 @@ async function buildIndex(ws) {
       const stem = name.slice(0, -5);
       if (data.views && data.propositions) {
         const png = names.includes(`${stem}-v1.png`) ? `${stem}-v1.png` : '';
-        records.push({ stem, data, png, kind: 'structure' });
+        records.push({ stem, data, png, kind: 'structure', fallback: names.includes(`${stem}-fallback.html`) });
       } else if (data.layout === 'turn-card') {
         const png = names.includes(`${stem}.png`) ? `${stem}.png` : '';
         records.push({ stem, data, png, kind: 'turn-card' });
@@ -38,12 +40,13 @@ async function buildIndex(ws) {
     } catch {}
   }
   records.sort((a, b) => String(b.data.created_at || b.data.createdAt || '').localeCompare(String(a.data.created_at || a.data.createdAt || '')));
-  const items = records.map(({ stem, data, png, kind }) => {
+  const items = records.map(({ stem, data, png, kind, fallback }) => {
     const title = data.headline || data.topic || data.title || '未命名';
     const detail = kind === 'structure'
       ? `${data.propositions.length} 条命题 · ${data.relations.length} 条关系 · ${data.views.length} 个视图`
       : `turn card · ${data.bodyChars || ''} 字`;
-    return `<article class="card"><a href="${png || (kind === 'structure' ? `${stem}-v1.html` : `${stem}.html`)}">${png ? `<img src="${png}" alt="${title}">` : '<span>HTML</span>'}</a><h2>${title}</h2><p>${detail}</p><p><a href="${stem}.json">${kind === 'structure' ? '结构记录' : '卡片记录'}</a> · <a href="${stem}.source.md">来源对话</a>${kind === 'structure' ? ` · <a href="${stem}.evidence.json">证据索引</a>` : ''}</p></article>`;
+    const href = fallback ? `${stem}-fallback.html` : png || (kind === 'structure' ? `${stem}-v1.html` : `${stem}.html`);
+    return `<article class="card"><a href="${esc(href)}">${png ? `<img src="${esc(png)}" alt="${esc(title)}">` : `<span>${fallback ? '诊断报告' : 'HTML'}</span>`}</a><h2>${esc(title)}</h2><p>${esc(detail)}</p><p><a href="${esc(`${stem}.json`)}">${kind === 'structure' ? '结构记录' : '卡片记录'}</a> · <a href="${esc(`${stem}.source.md`)}">来源对话</a>${kind === 'structure' ? ` · <a href="${esc(`${stem}.evidence.json`)}">证据索引</a>` : ''}</p></article>`;
   }).join('');
   const page = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>知识结构图集</title><style>*{box-sizing:border-box}body{margin:0;background:#f5f7fc;color:#17181c;font-family:"Microsoft YaHei","PingFang SC",sans-serif}main{max-width:1120px;margin:auto;padding:48px 24px}h1{font-size:36px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.card{background:#fff;border:1px solid #dce2ee;border-radius:14px;padding:16px}.card img{width:100%;height:auto;border-radius:8px}.card h2{font-size:20px}.card p{font-size:14px;color:#5c626e}.card a{color:#2f5cff}@media(max-width:760px){.grid{grid-template-columns:1fr}}</style></head><body><main><h1>知识结构图集</h1><p>先有结构，再有图。知识结构与旧版 turn card 都保留在同一索引里。</p><div class="grid">${items || '<p>还没有结构。</p>'}</div></main></body></html>`;
   await writeAtomic(join(dir, 'index.html'), page);
@@ -77,6 +80,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!source.trim()) throw new Error('对话内容为空。');
   const workflow = await runKnowledgeWorkflow(source, { authored });
   const outputs = [];
+  let hasFallback = false;
   await withArtifactLock(ws, async () => {
     const outDir = join(ws, 'infographics');
     const tmpDir = join(ws, '.knowledge/tmp');
@@ -97,11 +101,13 @@ export async function main(argv = process.argv.slice(2)) {
       }
       const hasErrors = findings.some((item) => item.severity === 'error');
       structure.created_at = new Date().toISOString();
+      structure.source_hash = sha256(source);
       structure.workflow = workflow.steps;
       structure.checks = findings;
       structure.degradation = { actions, html_only: argv.includes('--html-only'), browser_screenshotted: false };
       const suffix = workflow.structures.length > 1 ? `-${String(structureIndex + 1).padStart(2, '0')}` : '';
       const base = `${stamp()}_${slug(opt(argv, 'out', structure.topic))}${suffix}`;
+      structure.source_file = join(outDir, `${base}.source.md`);
       await writeAtomic(join(outDir, `${base}.json`), JSON.stringify(structure, null, 2));
       await writeAtomic(join(outDir, `${base}.evidence.json`), JSON.stringify(Object.fromEntries(workflow.evidenceIndex), null, 2));
       await writeAtomic(join(outDir, `${base}.source.md`), source);
@@ -109,6 +115,7 @@ export async function main(argv = process.argv.slice(2)) {
         await writeAtomic(join(outDir, `${base}-fallback.html`), fallbackHtml(structure, findings));
         console.log(`HTML 诊断降级：${join(outDir, `${base}-fallback.html`)}`);
         outputs.push({ base, fallback: true });
+        hasFallback = true;
         continue;
       }
       const navigation = {
@@ -141,9 +148,15 @@ export async function main(argv = process.argv.slice(2)) {
       outputs.push({ base, fallback: false });
     }
   });
+  const registry = await syncLearning(ws);
   const index = await buildIndex(ws);
   console.log(`结构：${workflow.stats.structures} 份，${workflow.stats.propositions} 条命题，${workflow.stats.relations} 条关系，${workflow.stats.backbone} 条主干。`);
+  console.log(`学习库已同步：${registry.concepts.length} 个跨对话概念。`);
   console.log(`图集已更新：${index}`);
+  if (hasFallback) {
+    console.log('未通过：已保留诊断报告，但没有把失败产物报成成功。');
+    return 2;
+  }
   console.log('OK');
   return 0;
 }

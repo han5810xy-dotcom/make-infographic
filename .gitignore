@@ -1,4 +1,7 @@
 node_modules/
+.knowledge/
+.bridge-token
+.infographics/
 .DS_Store
 *.log
 *.tmp

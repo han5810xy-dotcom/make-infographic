@@ -69,7 +69,7 @@ test('archive contract: exact allowlist, required runtime assets, no private eva
   assert.deepEqual([...names].sort(), [...new Set([...REQUIRED_FILES, 'LICENSE'])].sort());
   const extracted = join(dir, 'extracted');
   await extractZip(buffer, extracted);
-  assert.equal(await readFile(join(extracted, 'bridge', 'server.mjs'), 'utf8'), await readFile(join(root, 'bridge', 'server.mjs'), 'utf8'));
+  for (const name of [...REQUIRED_FILES, 'LICENSE']) assert.deepEqual(await readFile(join(extracted, name)), await readFile(join(root, name)), `archive differs from source: ${name}`);
   const pkg = JSON.parse(await readFile(join(extracted, 'package.json'), 'utf8'));
   assert.equal(pkg.version, VERSION);
 }));
@@ -138,7 +138,7 @@ test('installer: dependency failure rolls back old install', async () => workspa
 
 test('installer: replacement failure restores backup', async () => workspace(async (dir) => {
   const hook = join(dir, 'fail-commit.mjs');
-  await writeFile(hook, `import fs from 'node:fs/promises';\nimport { syncBuiltinESMExports } from 'node:module';\nconst rename = fs.rename;\nfs.rename = async (from, to) => {\n  if (String(from).includes('.make-infographic-staging-') && String(to).endsWith('make-infographic')) throw new Error('injected commit failure');\n  return rename(from, to);\n};\nsyncBuiltinESMExports();\n`);
+  await writeFile(hook, `import fs from 'node:fs/promises';\nimport { syncBuiltinESMExports } from 'node:module';\nconst cp = fs.cp;\nfs.cp = async (from, to, ...args) => {\n  if (String(from).includes('.make-infographic-staging-') && String(to).endsWith('make-infographic')) throw new Error('injected commit failure');\n  return cp(from, to, ...args);\n};\nsyncBuiltinESMExports();\n`);
   const { result, skills } = await runInstaller(dir, { existing: true, env: { NODE_OPTIONS: `--import=${pathToFileURL(hook).href}` } });
   const target = join(skills, 'make-infographic');
   assert.notEqual(result.status, 0, result.stdout + result.stderr);

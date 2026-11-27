@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { constants } from 'node:fs';
-import { access, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, cp, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, delimiter, dirname, join, parse, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -18,7 +18,8 @@ const say = (message) => console.log(message);
 const fail = (message) => { console.error(`没装好：${message}`); process.exitCode = 1; };
 
 function run(command, args, options = {}) {
-  return spawnSync(command, args, { encoding: 'utf8', shell: process.platform === 'win32', ...options });
+  const shell = process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command);
+  return spawnSync(command, args, { encoding: 'utf8', shell, ...options });
 }
 
 async function isFile(path) {
@@ -241,8 +242,15 @@ async function install() {
       await rename(target, backup);
       say(`发现旧版，暂存到 ${backup}`);
     }
-    await rename(staging, target);
+    await mkdir(target, { recursive: true });
     replaced = true;
+    await cp(staging, target, { recursive: true, force: true, filter: (source) => !source.split(/[\\/]/).includes('node_modules') });
+    const targetDeps = run(installer.command, installer.args, {
+      cwd: target,
+      stdio: 'inherit',
+      env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: 'true', PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true', npm_config_ignore_scripts: 'true' },
+    });
+    if (targetDeps.error || targetDeps.status !== 0) throw new Error(`新目录依赖安装失败（${installer.how}）。旧安装未改动；不会自动下载 Chromium。`);
     if (backup) {
       try { await rm(backup, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }); }
       catch { say(`提醒：新安装成功，但旧版备份仍保留在 ${backup}`); }

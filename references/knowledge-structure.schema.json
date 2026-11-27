@@ -54,9 +54,12 @@
     },
     "proposition": {
       "type": "object",
-      "required": ["id", "kind", "text", "evidence", "weight", "provenance"],
+      "required": ["id", "concept_id", "kind", "layer", "text", "evidence", "weight", "provenance"],
       "properties": {
         "id": { "type": "string", "pattern": "^p[0-9]+(_[a-f0-9]{8})?$" },
+        "concept_id": { "type": "string", "pattern": "^c_[a-f0-9]{16}$" },
+        "layer": { "enum": ["main", "branch", "example", "background"] },
+        "probe_questions": { "type": "object", "additionalProperties": { "type": "string" } },
         "kind": { "enum": ["定义", "主张", "因果", "条件", "对比", "步骤", "例子", "例外", "数据"] },
         "text": { "type": "string", "minLength": 1, "maxLength": 60 },
         "evidence": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/evidence" } },
@@ -93,7 +96,7 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "target": { "type": "string", "pattern": "^(backbone|branch:p[0-9]+(_[a-f0-9]{8})?)$" },
-        "graphic": { "enum": ["flow", "tree", "matrix", "network", "timeline", "pyramid", "turn-band"] },
+        "graphic": { "enum": ["flow", "tree", "matrix", "network", "turn-band"] },
         "props": { "type": "object" }
       }
     }

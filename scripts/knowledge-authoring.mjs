@@ -55,6 +55,7 @@ export function resolveAuthoring(authored, source) {
       review_hash: relation.review_hash || '',
     })),
     topo: authored.topo || 'network',
+    topo_source: authored.topo ? 'authored' : 'auto',
     backbone: authored.backbone || [],
     gaps: authored.gaps || [],
     key_conclusions: authored.key_conclusions || [],
